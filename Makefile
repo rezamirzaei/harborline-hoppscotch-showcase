@@ -1,4 +1,5 @@
 .PHONY: help install dev test lint format check docker-build docker-up docker-down clean hopp hopp-existing
+.PHONY: ansible-deploy tf-ansible-inventory
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -47,6 +48,17 @@ hopp: ## Run Hoppscotch CLI collection (spins up temporary API)
 
 hopp-existing: ## Run Hoppscotch CLI collection against an already running API
 	USE_EXISTING_SERVER=1 PORT=8000 ./scripts/run_hoppscotch_cli.sh
+
+ANSIBLE_INVENTORY ?= infra/ansible/inventory/hosts.ini
+SSH_USER ?= ubuntu
+
+ansible-deploy: ## Deploy stack to a server via Ansible
+	ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/playbooks/deploy.yml
+
+tf-ansible-inventory: ## Generate Ansible inventory via Terraform (set SERVER_HOST=...)
+	@test -n "$(SERVER_HOST)" || (echo "SERVER_HOST is required (e.g. SERVER_HOST=203.0.113.10)" && exit 1)
+	terraform -chdir=infra/terraform/local init
+	terraform -chdir=infra/terraform/local apply -auto-approve -var "server_host=$(SERVER_HOST)" -var "ssh_user=$(SSH_USER)"
 
 clean: ## Clean up cache files
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

@@ -138,6 +138,10 @@ Optional CLI secrets (enable the job):
 - Builds & pushes image to GHCR
 - SSH deploy runs `docker compose pull && docker compose up -d` on your server
 
+## Infrastructure automation (optional)
+- Ansible deploy playbook: `infra/ansible/playbooks/deploy.yml`
+- Terraform bootstrap (generates Ansible inventory): `infra/terraform/local`
+
 ## Local Development (without Docker)
 
 ```bash

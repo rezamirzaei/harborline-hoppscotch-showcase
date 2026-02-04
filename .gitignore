@@ -81,3 +81,12 @@ Thumbs.db
 # Project specific
 *.log
 uvicorn.pid
+
+# Ansible / Terraform (optional)
+*.retry
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+crash.log
+crash.*.log
+infra/ansible/inventory/hosts.ini
