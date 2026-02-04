@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Orders</h1>
+    <p>Monitor order lifecycle across channels and partners.</p>
+  </div>
+  <a class="button" href="/ui/orders/new">New Order</a>
+</section>
+
+<section class="filters card">
+  <form method="get" class="filter-row">
+    <label>
+      Status
+      <select name="status">
+        <option value="" {% if status == 'all' %}selected{% endif %}>All</option>
+        <option value="created" {% if status == 'created' %}selected{% endif %}>created</option>
+        <option value="reserved" {% if status == 'reserved' %}selected{% endif %}>reserved</option>
+        <option value="paid" {% if status == 'paid' %}selected{% endif %}>paid</option>
+      </select>
+    </label>
+    <button class="button secondary" type="submit">Apply</button>
+  </form>
+</section>
+
+<section class="card">
+  <div class="table">
+    <div class="table-row table-header">
+      <div>Order</div>
+      <div>Customer</div>
+      <div>Status</div>
+      <div>Total</div>
+      <div>Updated</div>
+    </div>
+    {% for order in orders %}
+    <div class="table-row">
+      <div><a href="/ui/orders/{{ order.id }}">{{ order.id[:10] }}</a></div>
+      <div>{{ order.customer_id }}</div>
+      <div><span class="status {{ order.status }}">{{ order.status }}</span></div>
+      <div>${{ "%.2f"|format(order.total) }}</div>
+      <div>{{ order.updated_at }}</div>
+    </div>
+    {% else %}
+    <div class="table-row empty">No orders found.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

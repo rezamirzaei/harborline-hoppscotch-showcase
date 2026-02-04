@@ -1,0 +1,139 @@
+{
+  "id": "harborline-local",
+  "v": 2,
+  "name": "Harborline (Local)",
+  "variables": [
+    {
+      "key": "BASE_URL",
+      "initialValue": "http://localhost:8000",
+      "currentValue": "http://localhost:8000",
+      "secret": false
+    },
+    {
+      "key": "DEMO_USER",
+      "initialValue": "ops@harborline.local",
+      "currentValue": "ops@harborline.local",
+      "secret": false
+    },
+    {
+      "key": "DEMO_PASSWORD",
+      "initialValue": "hoppscotch",
+      "currentValue": "hoppscotch",
+      "secret": true
+    },
+    {
+      "key": "PARTNER_API_KEY",
+      "initialValue": "partner-key",
+      "currentValue": "partner-key",
+      "secret": true
+    },
+    {
+      "key": "WEBHOOK_SECRET",
+      "initialValue": "whsec_demo",
+      "currentValue": "whsec_demo",
+      "secret": true
+    },
+    {
+      "key": "AUTH_TOKEN",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": true
+    },
+    {
+      "key": "IDEM_A_KEY",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "CUSTOMER_A_ID",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "ORDER_A_ID",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "ORDER_A_TOTAL",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "PAYMENT_A_ID",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "IDEM_B_KEY",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "CUSTOMER_B_ID",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "ORDER_B_ID",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "ORDER_B_TOTAL",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "PAYMENT_B_ID",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "WEBHOOK_B_TIMESTAMP",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "WEBHOOK_B_SIGNATURE",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": true
+    },
+    {
+      "key": "WEBHOOK_B_BODY",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": true
+    },
+    {
+      "key": "GRAPHQL_URL",
+      "initialValue": "<<BASE_URL>>/graphql",
+      "currentValue": "<<BASE_URL>>/graphql",
+      "secret": false
+    },
+    {
+      "key": "SSE_URL",
+      "initialValue": "<<BASE_URL>>/stream/orders",
+      "currentValue": "<<BASE_URL>>/stream/orders",
+      "secret": false
+    },
+    {
+      "key": "WS_URL",
+      "initialValue": "ws://localhost:8000/ws/shipments",
+      "currentValue": "ws://localhost:8000/ws/shipments",
+      "secret": false
+    }
+  ]
+}

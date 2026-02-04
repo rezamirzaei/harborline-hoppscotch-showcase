@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>GraphQL Console</h1>
+    <p>Run live queries against the Harborline GraphQL endpoint and compare with Hoppscotch.</p>
+  </div>
+  <a class="button secondary" href="http://localhost:3000" target="_blank">Open Hoppscotch</a>
+</section>
+
+<section class="grid split">
+  <div class="card console" data-graphql>
+    <h2>Query</h2>
+    <label class="field">
+      <span>GraphQL Query</span>
+      <textarea id="graphql-query" rows="10">{{ query }}</textarea>
+    </label>
+    <label class="field">
+      <span>Variables (JSON)</span>
+      <textarea id="graphql-variables" rows="6">{{ variables }}</textarea>
+    </label>
+    <div class="form-actions">
+      <button class="button" id="graphql-run" type="button">Run Query</button>
+      <button class="button secondary" id="graphql-clear" type="button">Clear Output</button>
+    </div>
+  </div>
+  <div class="card console">
+    <h2>Response</h2>
+    <pre id="graphql-output" class="code-block">Run a query to see results.</pre>
+  </div>
+</section>
+{% endblock %}

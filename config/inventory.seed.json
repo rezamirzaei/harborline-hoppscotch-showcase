@@ -1,0 +1,8 @@
+{
+  "items": [
+    {"sku": "SKU-RED-CHAIR", "available": 120},
+    {"sku": "SKU-BLUE-LAMP", "available": 80},
+    {"sku": "SKU-GREEN-SOFA", "available": 20},
+    {"sku": "SKU-WHITE-DESK", "available": 42}
+  ]
+}

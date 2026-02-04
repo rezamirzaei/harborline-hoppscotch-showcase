@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Create Order</h1>
+    <p>Seed the order flow to trigger payments, inventory, and realtime events.</p>
+  </div>
+</section>
+
+{% if error %}
+  <div class="alert">The items JSON is invalid. Please use the format shown below.</div>
+{% endif %}
+
+<section class="card form-card">
+  <form method="post" action="/ui/orders">
+    <div class="form-grid">
+      <label>
+        Customer ID
+        <input type="text" name="customer_id" placeholder="cust-001" required />
+      </label>
+      <label>
+        Currency
+        <input type="text" name="currency" value="USD" />
+      </label>
+    </div>
+    <label>
+      Items JSON
+      <textarea name="items_json" rows="8" required>{{ sample }}</textarea>
+    </label>
+    <div class="form-actions">
+      <button class="button" type="submit">Create Order</button>
+      <a class="button secondary" href="/ui/orders">Cancel</a>
+    </div>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+  <section class="hero">
+    <div>
+      <h1>Hoppscotch Deep-Dive Lab</h1>
+      <p>
+        Import the ready-made collection + environment and run a realistic multi-protocol commerce workflow:
+        auth, idempotency, partner inventory, payments, signed webhooks, GraphQL analytics, and realtime streams.
+      </p>
+    </div>
+    <div class="hero-meta">
+      <div class="meta-label">Importables</div>
+      <div class="meta-value">
+        <a href="/hoppscotch/harborline.collection.json">collection</a>
+        ·
+        <a href="/hoppscotch/harborline.environment.json">environment</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="grid split">
+    <div class="card">
+      <div class="page-header">
+        <div>
+          <h2>1) Download</h2>
+          <p>These files are served by the API for easy import.</p>
+        </div>
+      </div>
+      <ul>
+        <li><code>/hoppscotch/harborline.collection.json</code></li>
+        <li><code>/hoppscotch/harborline.environment.json</code></li>
+        <li><code>/hoppscotch/harborline.env.json</code> (CLI-friendly)</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="page-header">
+        <div>
+          <h2>2) Import + Run</h2>
+          <p>Hoppscotch UI: Collections → Import (JSON), then Environments → Import (JSON).</p>
+        </div>
+      </div>
+      <ol>
+        <li>Select the <code>Harborline (Local)</code> environment.</li>
+        <li>Run folders in order (00 → 40) to see chaining via env vars + scripts.</li>
+        <li>Open the GraphQL tab and introspect the schema at <code>/graphql</code>.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="page-header">
+      <div>
+        <h2>Runner (Hoppscotch CLI)</h2>
+        <p>Runs the same collection headlessly for CI/CD.</p>
+      </div>
+    </div>
+    <pre class="code-block">npx -y @hoppscotch/cli@0.30.1 test hoppscotch/harborline.collection.json -e hoppscotch/harborline.env.json</pre>
+  </section>
+
+  <section class="card">
+    <div class="page-header">
+      <div>
+        <h2>Realtime (SSE + WebSocket)</h2>
+        <p>Hoppscotch → Realtime: connect and then create an order to watch events stream.</p>
+      </div>
+    </div>
+    <ul>
+      <li>SSE: <code>/stream/orders</code> (full URL: <code>http://localhost:8000/stream/orders</code>)</li>
+      <li>WS: <code>/ws/shipments</code> (full URL: <code>ws://localhost:8000/ws/shipments</code>)</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="page-header">
+      <div>
+        <h2>Why Hoppscotch (in this scenario)</h2>
+        <p>Not just “send requests” — this demo exercises features that become painful to hand-roll.</p>
+      </div>
+    </div>
+    <ul>
+      <li>Environment variables + secrets drive every request without copy/paste.</li>
+      <li>Pre-request scripts generate idempotency keys and compute webhook HMAC signatures.</li>
+      <li>Test scripts assert headers + state transitions and store IDs for downstream requests.</li>
+      <li>The Runner executes the entire workflow in one click (UI) or in CI (CLI).</li>
+      <li>GraphQL works side-by-side with REST using the same environment context.</li>
+      <li>Realtime tooling helps ops teams debug event streams (SSE + WebSocket) live.</li>
+    </ul>
+  </section>
+{% endblock %}

@@ -1,0 +1,401 @@
+{
+  "v": 2,
+  "name": "Harborline Commerce Core (Hoppscotch Deep Dive)",
+  "folders": [
+    {
+      "v": 2,
+      "name": "00 - Setup",
+      "folders": [],
+      "requests": [
+        {
+          "v": "3",
+          "name": "Health Check",
+          "endpoint": "<<BASE_URL>>/health",
+          "method": "GET",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Health returns ok\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.status).toBe(\"ok\"); pw.expect(pw.response.body.time).toBeType(\"string\"); });",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Login (stores AUTH_TOKEN)",
+          "endpoint": "<<BASE_URL>>/auth/login",
+          "method": "POST",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"username\":\"<<DEMO_USER>>\",\"password\":\"<<DEMO_PASSWORD>>\"}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Login succeeds\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.access_token).toBeType(\"string\"); }); pw.env.set(\"AUTH_TOKEN\", pw.response.body.access_token);",
+          "requestVariables": []
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": []
+    },
+    {
+      "v": 2,
+      "name": "10 - Order A (Idempotency + Inventory)",
+      "folders": [],
+      "requests": [
+        {
+          "v": "3",
+          "name": "Create Order A (sets IDEM_A_KEY, stores ORDER_A_*)",
+          "endpoint": "<<BASE_URL>>/orders",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "Idempotency-Key",
+              "value": "<<IDEM_A_KEY>>",
+              "active": true
+            }
+          ],
+          "params": [],
+          "auth": {
+            "authType": "bearer",
+            "authActive": true,
+            "token": "<<AUTH_TOKEN>>"
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"customer_id\":\"<<CUSTOMER_A_ID>>\",\"currency\":\"USD\",\"items\":[{\"sku\":\"SKU-RED-CHAIR\",\"qty\":2,\"unit_price\":25.0},{\"sku\":\"SKU-BLUE-LAMP\",\"qty\":1,\"unit_price\":10.0}],\"note\":\"Hoppscotch deep-dive order A\"}"
+          },
+          "preRequestScript": "const id = (typeof crypto !== \"undefined\" && crypto.randomUUID) ? crypto.randomUUID() : `r${Date.now()}${Math.random().toString(16).slice(2)}`; pw.env.set(\"IDEM_A_KEY\", `idem-a-${id}`); pw.env.set(\"CUSTOMER_A_ID\", `cust-a-${id.slice(0,8)}`);",
+          "testScript": "pw.test(\"Order A created\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.id).toBeType(\"string\"); pw.expect(pw.response.body.status).toBe(\"created\"); pw.expect(pw.response.body.total).toBe(60); }); pw.env.set(\"ORDER_A_ID\", pw.response.body.id); pw.env.set(\"ORDER_A_TOTAL\", String(pw.response.body.total));",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Replay Create Order A (assert Idempotency-Replayed)",
+          "endpoint": "<<BASE_URL>>/orders",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "Idempotency-Key",
+              "value": "<<IDEM_A_KEY>>",
+              "active": true
+            }
+          ],
+          "params": [],
+          "auth": {
+            "authType": "bearer",
+            "authActive": true,
+            "token": "<<AUTH_TOKEN>>"
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"customer_id\":\"<<CUSTOMER_A_ID>>\",\"currency\":\"USD\",\"items\":[{\"sku\":\"SKU-RED-CHAIR\",\"qty\":2,\"unit_price\":25.0},{\"sku\":\"SKU-BLUE-LAMP\",\"qty\":1,\"unit_price\":10.0}],\"note\":\"Hoppscotch deep-dive order A\"}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Idempotency replay\", () => { pw.expect(pw.response.status).toBe(200); const headers = pw.response.headers ?? {}; const getHeader = (name) => { const needle = String(name).toLowerCase(); if (Array.isArray(headers)) { const hit = headers.find((h) => String(h.key ?? \"\").toLowerCase() === needle); return hit ? hit.value : undefined; } return headers[needle] ?? headers[name] ?? headers[String(name)]; }; const replayed = getHeader(\"idempotency-replayed\") ?? getHeader(\"Idempotency-Replayed\"); pw.expect(String(replayed)).toBe(\"true\"); pw.expect(pw.response.body.id).toBe(pw.env.get(\"ORDER_A_ID\")); });",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Reserve Inventory A (partner auth)",
+          "endpoint": "<<BASE_URL>>/inventory/reservations",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "<<PARTNER_API_KEY>>",
+              "active": true
+            }
+          ],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"order_id\":\"<<ORDER_A_ID>>\",\"items\":[{\"sku\":\"SKU-RED-CHAIR\",\"qty\":2,\"unit_price\":25.0},{\"sku\":\"SKU-BLUE-LAMP\",\"qty\":1,\"unit_price\":10.0}]}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Inventory reserved\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.status).toBe(\"reserved\"); pw.expect(pw.response.body.shortages.length).toBe(0); });",
+          "requestVariables": []
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": []
+    },
+    {
+      "v": 2,
+      "name": "20 - Payment A (Capture)",
+      "folders": [],
+      "requests": [
+        {
+          "v": "3",
+          "name": "Create Payment Intent A (stores PAYMENT_A_ID)",
+          "endpoint": "<<BASE_URL>>/payments/intents",
+          "method": "POST",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "bearer",
+            "authActive": true,
+            "token": "<<AUTH_TOKEN>>"
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"order_id\":\"<<ORDER_A_ID>>\",\"amount\":<<ORDER_A_TOTAL>>,\"method\":\"card\",\"capture\":false}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Intent created\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.status).toBe(\"requires_capture\"); pw.expect(pw.response.body.id).toBeType(\"string\"); }); pw.env.set(\"PAYMENT_A_ID\", pw.response.body.id);",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Capture Payment A",
+          "endpoint": "<<BASE_URL>>/payments/capture/<<PAYMENT_A_ID>>",
+          "method": "POST",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "bearer",
+            "authActive": true,
+            "token": "<<AUTH_TOKEN>>"
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Capture succeeds\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.status).toBe(\"succeeded\"); pw.expect(pw.response.body.order_id).toBe(pw.env.get(\"ORDER_A_ID\")); });",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Get Order A (assert paid)",
+          "endpoint": "<<BASE_URL>>/orders/<<ORDER_A_ID>>",
+          "method": "GET",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "bearer",
+            "authActive": true,
+            "token": "<<AUTH_TOKEN>>"
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Order A is paid\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.status).toBe(\"paid\"); });",
+          "requestVariables": []
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": []
+    },
+    {
+      "v": 2,
+      "name": "30 - Order B + Payment B (Webhook HMAC)",
+      "folders": [],
+      "requests": [
+        {
+          "v": "3",
+          "name": "Create Order B (stores ORDER_B_*)",
+          "endpoint": "<<BASE_URL>>/orders",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "Idempotency-Key",
+              "value": "<<IDEM_B_KEY>>",
+              "active": true
+            }
+          ],
+          "params": [],
+          "auth": {
+            "authType": "bearer",
+            "authActive": true,
+            "token": "<<AUTH_TOKEN>>"
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"customer_id\":\"<<CUSTOMER_B_ID>>\",\"currency\":\"USD\",\"items\":[{\"sku\":\"SKU-WHITE-DESK\",\"qty\":1,\"unit_price\":75.0},{\"sku\":\"SKU-BLUE-LAMP\",\"qty\":2,\"unit_price\":15.0}],\"note\":\"Hoppscotch deep-dive order B (webhook flow)\"}"
+          },
+          "preRequestScript": "const id = (typeof crypto !== \"undefined\" && crypto.randomUUID) ? crypto.randomUUID() : `r${Date.now()}${Math.random().toString(16).slice(2)}`; pw.env.set(\"IDEM_B_KEY\", `idem-b-${id}`); pw.env.set(\"CUSTOMER_B_ID\", `cust-b-${id.slice(0,8)}`);",
+          "testScript": "pw.test(\"Order B created\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.id).toBeType(\"string\"); pw.expect(pw.response.body.status).toBe(\"created\"); pw.expect(pw.response.body.total).toBe(105); }); pw.env.set(\"ORDER_B_ID\", pw.response.body.id); pw.env.set(\"ORDER_B_TOTAL\", String(pw.response.body.total));",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Reserve Inventory B (partner auth)",
+          "endpoint": "<<BASE_URL>>/inventory/reservations",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "X-API-Key",
+              "value": "<<PARTNER_API_KEY>>",
+              "active": true
+            }
+          ],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"order_id\":\"<<ORDER_B_ID>>\",\"items\":[{\"sku\":\"SKU-WHITE-DESK\",\"qty\":1,\"unit_price\":75.0},{\"sku\":\"SKU-BLUE-LAMP\",\"qty\":2,\"unit_price\":15.0}]}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Inventory reserved\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.status).toBe(\"reserved\"); pw.expect(pw.response.body.shortages.length).toBe(0); });",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Create Payment Intent B (stores PAYMENT_B_ID)",
+          "endpoint": "<<BASE_URL>>/payments/intents",
+          "method": "POST",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "bearer",
+            "authActive": true,
+            "token": "<<AUTH_TOKEN>>"
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"order_id\":\"<<ORDER_B_ID>>\",\"amount\":<<ORDER_B_TOTAL>>,\"method\":\"card\",\"capture\":false}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Intent created\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.status).toBe(\"requires_capture\"); pw.expect(pw.response.body.id).toBeType(\"string\"); }); pw.env.set(\"PAYMENT_B_ID\", pw.response.body.id);",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Send signed Webhook (HMAC SHA-256) for Payment B",
+          "endpoint": "<<BASE_URL>>/payments/webhooks",
+          "method": "POST",
+          "headers": [
+            {
+              "key": "X-Signature",
+              "value": "t=<<WEBHOOK_B_TIMESTAMP>>,v1=<<WEBHOOK_B_SIGNATURE>>",
+              "active": true
+            }
+          ],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "<<WEBHOOK_B_BODY>>"
+          },
+          "preRequestScript": "const secret = pw.env.get(\"WEBHOOK_SECRET\"); const orderId = pw.env.get(\"ORDER_B_ID\"); const paymentId = pw.env.get(\"PAYMENT_B_ID\"); const timestamp = Math.floor(Date.now() / 1000).toString(); const body = JSON.stringify({ type: \"payment.succeeded\", data: { order_id: orderId, payment_id: paymentId } }); const signedPayload = `${timestamp}.${body}`; const toBytes = (value) => Array.from(String(value), (ch) => ch.charCodeAt(0)); const keyBytes = toBytes(secret); const msgBytes = toBytes(signedPayload); const key = await crypto.subtle.importKey(\"raw\", keyBytes, { name: \"HMAC\", hash: \"SHA-256\" }, false, [\"sign\"]); const signature = await crypto.subtle.sign(\"HMAC\", key, msgBytes); const asByteArray = (data) => { if (Array.isArray(data)) return data; if (data && typeof data.length === \"number\") return Array.from(data); return Array.from(new Uint8Array(data)); }; const sigHex = asByteArray(signature).map((b) => Number(b).toString(16).padStart(2, \"0\")).join(\"\"); pw.env.set(\"WEBHOOK_B_TIMESTAMP\", timestamp); pw.env.set(\"WEBHOOK_B_SIGNATURE\", sigHex); pw.env.set(\"WEBHOOK_B_BODY\", body);",
+          "testScript": "pw.test(\"Webhook accepted\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.received).toBe(true); });",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "Get Order B (assert paid via webhook)",
+          "endpoint": "<<BASE_URL>>/orders/<<ORDER_B_ID>>",
+          "method": "GET",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "bearer",
+            "authActive": true,
+            "token": "<<AUTH_TOKEN>>"
+          },
+          "body": {
+            "contentType": null,
+            "body": null
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Order B is paid\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.status).toBe(\"paid\"); });",
+          "requestVariables": []
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": []
+    },
+    {
+      "v": 2,
+      "name": "40 - GraphQL Analytics",
+      "folders": [],
+      "requests": [
+        {
+          "v": "3",
+          "name": "GraphQL - Metrics",
+          "endpoint": "<<BASE_URL>>/graphql",
+          "method": "POST",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"query\":\"query Metrics { metrics { totalOrders totalRevenue paidOrders } }\",\"variables\":{}}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Metrics reflect both flows\", () => { pw.expect(pw.response.status).toBe(200); const metrics = pw.response.body.data.metrics; pw.expect(metrics.totalOrders >= 2).toBe(true); pw.expect(metrics.paidOrders >= 2).toBe(true); pw.expect(metrics.totalRevenue >= 165).toBe(true); });",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "GraphQL - Order A lookup",
+          "endpoint": "<<BASE_URL>>/graphql",
+          "method": "POST",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"query\":\"query Order($id: String!) { order(id: $id) { id status total customerId } }\",\"variables\":{\"id\":\"<<ORDER_A_ID>>\"}}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Order A available via GraphQL\", () => { pw.expect(pw.response.status).toBe(200); const order = pw.response.body.data.order; pw.expect(order.id).toBe(pw.env.get(\"ORDER_A_ID\")); pw.expect(order.status).toBe(\"paid\"); });",
+          "requestVariables": []
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": []
+    }
+  ],
+  "requests": [],
+  "auth": {
+    "authType": "inherit",
+    "authActive": true
+  },
+  "headers": []
+}

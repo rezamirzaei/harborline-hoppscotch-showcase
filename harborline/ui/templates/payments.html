@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Payments</h1>
+    <p>Track payment intent state across the order funnel.</p>
+  </div>
+</section>
+
+<section class="card">
+  <div class="table">
+    <div class="table-row table-header">
+      <div>Payment</div>
+      <div>Order</div>
+      <div>Status</div>
+      <div>Amount</div>
+      <div>Created</div>
+    </div>
+    {% for payment in payments %}
+    <div class="table-row">
+      <div>{{ payment.id[:10] }}</div>
+      <div><a href="/ui/orders/{{ payment.order_id }}">{{ payment.order_id[:8] }}</a></div>
+      <div><span class="status {{ payment.status }}">{{ payment.status }}</span></div>
+      <div>${{ "%.2f"|format(payment.amount) }}</div>
+      <div>{{ payment.created_at }}</div>
+    </div>
+    {% else %}
+    <div class="table-row empty">No payments created.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

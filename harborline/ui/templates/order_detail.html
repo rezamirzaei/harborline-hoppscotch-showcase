@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Order {{ order.id[:10] }}</h1>
+    <p>Customer {{ order.customer_id }} • {{ order.currency }} • {{ order.created_at }}</p>
+  </div>
+  <a class="button secondary" href="/ui/orders">Back to Orders</a>
+</section>
+
+{% if error == 'inventory' %}
+  <div class="alert">Inventory reservation failed. Not enough stock for one or more items.</div>
+{% endif %}
+
+<section class="grid split">
+  <div class="card">
+    <h2>Order Items</h2>
+    <div class="table">
+      <div class="table-row table-header">
+        <div>SKU</div>
+        <div>Qty</div>
+        <div>Unit</div>
+        <div>Total</div>
+      </div>
+      {% for item in order.items %}
+      <div class="table-row">
+        <div>{{ item.sku }}</div>
+        <div>{{ item.qty }}</div>
+        <div>${{ "%.2f"|format(item.unit_price) }}</div>
+        <div>${{ "%.2f"|format(item.line_total) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <h2>Order Actions</h2>
+    <div class="status-row">
+      <span>Status</span>
+      <span class="status {{ order.status }}">{{ order.status }}</span>
+    </div>
+    <div class="status-row">
+      <span>Total</span>
+      <strong>${{ "%.2f"|format(order.total) }}</strong>
+    </div>
+    <form method="post" action="/ui/orders/{{ order.id }}/reserve">
+      <button class="button" type="submit">Reserve Inventory</button>
+    </form>
+    <form method="post" action="/ui/orders/{{ order.id }}/payment-intent">
+      <label class="checkbox">
+        <input type="checkbox" name="capture" />
+        Capture immediately
+      </label>
+      <button class="button secondary" type="submit">Create Payment Intent</button>
+    </form>
+  </div>
+</section>
+
+<section class="card">
+  <div class="card-header">
+    <h2>Payments</h2>
+    <a class="link" href="/ui/payments">View all</a>
+  </div>
+  <div class="table">
+    <div class="table-row table-header">
+      <div>ID</div>
+      <div>Status</div>
+      <div>Amount</div>
+      <div>Action</div>
+    </div>
+    {% for payment in payments %}
+    <div class="table-row">
+      <div>{{ payment.id[:10] }}</div>
+      <div><span class="status {{ payment.status }}">{{ payment.status }}</span></div>
+      <div>${{ "%.2f"|format(payment.amount) }}</div>
+      <div>
+        {% if payment.status != 'succeeded' %}
+        <form method="post" action="/ui/payments/{{ payment.id }}/capture">
+          <button class="button tertiary" type="submit">Capture</button>
+        </form>
+        {% else %}
+        <span class="muted">Captured</span>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="table-row empty">No payments yet.</div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

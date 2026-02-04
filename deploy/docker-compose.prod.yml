@@ -1,0 +1,46 @@
+services:
+  api:
+    image: ${HARBORLINE_API_IMAGE:-ghcr.io/your-org/harborline-commerce-api:latest}
+    env_file:
+      - config/api.env
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  hoppscotch-db:
+    image: postgres:16-alpine
+    env_file:
+      - config/hoppscotch.env
+    volumes:
+      - hoppscotch-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  hoppscotch-migrate:
+    image: hoppscotch/hoppscotch
+    env_file:
+      - config/hoppscotch.env
+    depends_on:
+      hoppscotch-db:
+        condition: service_healthy
+    command: ["pnpm", "exec", "prisma", "migrate", "deploy"]
+    restart: "no"
+
+  hoppscotch:
+    image: hoppscotch/hoppscotch
+    env_file:
+      - config/hoppscotch.env
+    depends_on:
+      hoppscotch-migrate:
+        condition: service_completed_successfully
+    ports:
+      - "3000:3000"
+      - "3100:3100"
+      - "3170:3170"
+    restart: unless-stopped
+
+volumes:
+  hoppscotch-db:

@@ -1,0 +1,7 @@
+{
+  "type": "payment.succeeded",
+  "data": {
+    "order_id": "<<ORDER_ID>>",
+    "payment_id": "<<PAYMENT_ID>>"
+  }
+}

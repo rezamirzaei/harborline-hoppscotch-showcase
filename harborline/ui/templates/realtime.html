@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Realtime Operations Lab</h1>
+    <p>Listen to SSE and WebSocket streams while you create orders or capture payments.</p>
+  </div>
+  <a class="button secondary" href="http://localhost:3000" target="_blank">Open Hoppscotch</a>
+</section>
+
+<section class="grid split">
+  <div class="card console" data-sse>
+    <h2>SSE Stream</h2>
+    <p class="muted">Stream order events from <code>/stream/orders</code>.</p>
+    <label class="field">
+      <span>Filter by Order ID (optional)</span>
+      <input id="sse-order-id" type="text" placeholder="order-id" />
+    </label>
+    <div class="form-actions">
+      <button class="button" id="sse-start" type="button">Start SSE</button>
+      <button class="button secondary" id="sse-stop" type="button">Stop SSE</button>
+      <button class="button tertiary" id="sse-clear" type="button">Clear</button>
+    </div>
+    <pre id="sse-log" class="code-block"></pre>
+  </div>
+  <div class="card console" data-ws>
+    <h2>WebSocket Stream</h2>
+    <p class="muted">Connect to <code>/ws/shipments</code> for realtime updates.</p>
+    <div class="form-actions">
+      <button class="button" id="ws-connect" type="button">Connect WS</button>
+      <button class="button secondary" id="ws-disconnect" type="button">Disconnect WS</button>
+      <button class="button tertiary" id="ws-clear" type="button">Clear</button>
+    </div>
+    <pre id="ws-log" class="code-block"></pre>
+  </div>
+</section>
+
+<section class="card highlight">
+  <div>
+    <h2>Try it live</h2>
+    <p>Create a new order from the Orders page, reserve inventory, and capture a payment to see events appear here.</p>
+  </div>
+  <a class="button" href="/ui/orders/new">Create Order</a>
+</section>
+{% endblock %}

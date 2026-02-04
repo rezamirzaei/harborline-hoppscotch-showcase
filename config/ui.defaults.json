@@ -1,0 +1,8 @@
+{
+  "graphql_query": "query {\n  metrics {\n    totalOrders\n    totalRevenue\n    paidOrders\n  }\n}\n",
+  "graphql_variables": {},
+  "order_items_sample": [
+    {"sku": "SKU-RED-CHAIR", "qty": 2, "unit_price": 49.99},
+    {"sku": "SKU-BLUE-LAMP", "qty": 1, "unit_price": 19.99}
+  ]
+}

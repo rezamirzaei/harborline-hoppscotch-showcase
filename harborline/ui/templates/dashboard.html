@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="hero">
+  <div>
+    <h1>Harborline Live Overview</h1>
+    <p>Track orders, payments, and inventory in a single operational cockpit.</p>
+  </div>
+  <div class="hero-meta">
+    <div class="meta-label">Snapshot</div>
+    <div class="meta-value">{{ timestamp }}</div>
+  </div>
+</section>
+
+<section class="grid metrics">
+  <div class="card">
+    <div class="card-label">Total Orders</div>
+    <div class="card-value">{{ view.total_orders }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Total Revenue</div>
+    <div class="card-value">${{ "%.2f"|format(view.total_revenue) }}</div>
+  </div>
+  <div class="card">
+    <div class="card-label">Paid Orders</div>
+    <div class="card-value">{{ view.paid_orders }}</div>
+  </div>
+</section>
+
+<section class="grid split">
+  <div class="card">
+    <div class="card-header">
+      <h2>Recent Orders</h2>
+      <a class="link" href="/ui/orders">View all</a>
+    </div>
+    <div class="table">
+      <div class="table-row table-header">
+        <div>ID</div>
+        <div>Status</div>
+        <div>Total</div>
+      </div>
+      {% for order in view.recent_orders %}
+      <div class="table-row">
+        <div><a href="/ui/orders/{{ order.id }}">{{ order.id[:8] }}</a></div>
+        <div><span class="status {{ order.status }}">{{ order.status }}</span></div>
+        <div>${{ "%.2f"|format(order.total) }}</div>
+      </div>
+      {% else %}
+      <div class="table-row empty">No orders yet.</div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <h2>Inventory Snapshot</h2>
+      <a class="link" href="/ui/inventory">Manage</a>
+    </div>
+    <div class="table">
+      <div class="table-row table-header">
+        <div>SKU</div>
+        <div>Available</div>
+      </div>
+      {% for item in view.inventory %}
+      <div class="table-row">
+        <div>{{ item.sku }}</div>
+        <div>{{ item.available }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="card highlight">
+  <div>
+    <h2>Quick Start</h2>
+    <p>Create a new order, reserve inventory, and capture a payment to push events into the realtime streams.</p>
+  </div>
+  <a class="button" href="/ui/orders/new">New Order</a>
+</section>
+{% endblock %}

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{ title or "Harborline Console" }}</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark">HC</span>
+          <div>
+            <div class="brand-title">Harborline Console</div>
+            <div class="brand-subtitle">Commerce core control room</div>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="/ui" class="nav-link{% if request.url.path == '/ui' %} active{% endif %}">Dashboard</a>
+          <a href="/ui/orders" class="nav-link{% if '/ui/orders' in request.url.path %} active{% endif %}">Orders</a>
+          <a href="/ui/payments" class="nav-link{% if '/ui/payments' in request.url.path %} active{% endif %}">Payments</a>
+          <a href="/ui/inventory" class="nav-link{% if '/ui/inventory' in request.url.path %} active{% endif %}">Inventory</a>
+          <a href="/ui/graphql" class="nav-link{% if '/ui/graphql' in request.url.path %} active{% endif %}">GraphQL</a>
+          <a href="/ui/realtime" class="nav-link{% if '/ui/realtime' in request.url.path %} active{% endif %}">Realtime</a>
+          <a href="/ui/hoppscotch" class="nav-link{% if '/ui/hoppscotch' in request.url.path %} active{% endif %}">Hoppscotch</a>
+        </nav>
+      </header>
+      <main class="container">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+    <script src="/static/console.js"></script>
+  </body>
+</html>
