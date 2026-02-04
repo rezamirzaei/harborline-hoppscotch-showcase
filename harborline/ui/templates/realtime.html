@@ -3,16 +3,33 @@
 {% block content %}
 <section class="page-header">
   <div>
-    <h1>Realtime Operations Lab</h1>
-    <p>Listen to SSE and WebSocket streams while you create orders or capture payments.</p>
+    <h1>Live Ops</h1>
+    <p>Watch order + payment events in real time (SSE + WebSocket). Run a workflow to generate traffic instantly.</p>
   </div>
-  <a class="button secondary" href="http://localhost:3000" target="_blank">Open Hoppscotch</a>
+  <div class="form-actions">
+    <a class="button secondary" href="/ui/hoppscotch">Hoppscotch Lab</a>
+    {% if hoppscotch_app_url %}
+      <a class="button tertiary" href="{{ hoppscotch_app_url }}" target="_blank">Open Hoppscotch</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="card highlight" data-ops-simulator>
+  <div>
+    <h2>Ops simulator</h2>
+    <p>Create order → reserve inventory → capture payment. The event bus broadcasts each step to both streams below.</p>
+    <div id="ops-status" class="muted"></div>
+  </div>
+  <div class="form-actions">
+    <button class="button" id="ops-run" type="button">Run workflow</button>
+    <a class="button secondary" href="/ui/orders">View orders</a>
+  </div>
 </section>
 
 <section class="grid split">
   <div class="card console" data-sse>
     <h2>SSE Stream</h2>
-    <p class="muted">Stream order events from <code>/stream/orders</code>.</p>
+    <p class="muted">Auto-connects to <code>/stream/orders</code>. Use the filter to focus on one workflow.</p>
     <label class="field">
       <span>Filter by Order ID (optional)</span>
       <input id="sse-order-id" type="text" placeholder="order-id" />
@@ -26,7 +43,7 @@
   </div>
   <div class="card console" data-ws>
     <h2>WebSocket Stream</h2>
-    <p class="muted">Connect to <code>/ws/shipments</code> for realtime updates.</p>
+    <p class="muted">Auto-connects to <code>/ws/shipments</code> for realtime updates.</p>
     <div class="form-actions">
       <button class="button" id="ws-connect" type="button">Connect WS</button>
       <button class="button secondary" id="ws-disconnect" type="button">Disconnect WS</button>
@@ -36,11 +53,18 @@
   </div>
 </section>
 
-<section class="card highlight">
-  <div>
-    <h2>Try it live</h2>
-    <p>Create a new order from the Orders page, reserve inventory, and capture a payment to see events appear here.</p>
-  </div>
-  <a class="button" href="/ui/orders/new">Create Order</a>
+<section class="card inset" data-hoppscotch-realtime>
+  <h2>Try it in Hoppscotch</h2>
+  <p class="muted">
+    Import the
+    <a class="link" href="/hoppscotch/harborline.collection.json">collection</a>
+    and
+    <a class="link" href="/hoppscotch/harborline.environment.json">environment</a>,
+    then Hoppscotch → Realtime: connect to the same streams and watch events while you run the workflow.
+  </p>
+  <ul>
+    <li>SSE URL: <code id="hoppscotch-sse-url">/stream/orders</code></li>
+    <li>WS URL: <code id="hoppscotch-ws-url">/ws/shipments</code></li>
+  </ul>
 </section>
 {% endblock %}

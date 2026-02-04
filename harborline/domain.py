@@ -74,6 +74,7 @@ class Order(BaseModel):
     currency: str
     items: List[OrderItem]
     total: float
+    note: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

@@ -1,8 +1,46 @@
 services:
+  api-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: harborline
+      POSTGRES_PASSWORD: harborline
+      POSTGRES_DB: harborline
+    volumes:
+      - harborline-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  graph-db:
+    image: neo4j:5
+    environment:
+      NEO4J_AUTH: neo4j/harborline
+    volumes:
+      - harborline-graph:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p harborline 'RETURN 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
   api:
     image: ${HARBORLINE_API_IMAGE:-ghcr.io/your-org/harborline-commerce-api:latest}
     env_file:
       - config/api.env
+    environment:
+      DATABASE_URL: postgresql+psycopg://harborline:harborline@api-db:5432/harborline
+      GRAPH_DB_URI: bolt://graph-db:7687
+      GRAPH_DB_USER: neo4j
+      GRAPH_DB_PASSWORD: harborline
+      GRAPH_DB_DATABASE: neo4j
+    depends_on:
+      api-db:
+        condition: service_healthy
+      graph-db:
+        condition: service_healthy
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -43,4 +81,6 @@ services:
     restart: unless-stopped
 
 volumes:
+  harborline-db:
+  harborline-graph:
   hoppscotch-db:

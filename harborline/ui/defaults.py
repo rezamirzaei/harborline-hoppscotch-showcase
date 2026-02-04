@@ -12,6 +12,10 @@ class UiDefaults(BaseModel):
     graphql_query: str
     graphql_variables: Dict[str, Any]
     order_items_sample: list[Dict[str, Any]]
+    graph_customer_recommendations_query: str = ""
+    graph_customer_recommendations_variables: Dict[str, Any] = {}
+    graph_also_bought_query: str = ""
+    graph_also_bought_variables: Dict[str, Any] = {}
 
 
 @lru_cache(maxsize=4)

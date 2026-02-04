@@ -3,7 +3,7 @@
 This folder contains ready-to-import Hoppscotch artifacts for Harborline.
 
 ## Files
-- `hoppscotch/harborline.collection.json`: Full end-to-end flow (REST + GraphQL + scripts + idempotency + HMAC webhooks).
+- `hoppscotch/harborline.collection.json`: Full end-to-end flow (REST + GraphQL + scripts + idempotency + HMAC webhooks + graph analytics).
 - `hoppscotch/harborline.environment.json`: Hoppscotch environment (v2 export format).
 - `hoppscotch/harborline.env.json`: Simple key-value env file (handy for Hoppscotch CLI).
 
@@ -17,4 +17,6 @@ Hoppscotch → Realtime:
 - SSE URL: `<<SSE_URL>>` (or `http://localhost:8000/stream/orders`)
 - WS URL: `<<WS_URL>>` (or `ws://localhost:8000/ws/shipments`)
 
-Create an order to see events stream into both connections.
+Then run one of:
+- Collection folder `05 - Live Ops (Realtime Debug)` → request `Run Ops Simulator` (fastest)
+- Create an order in the Harborline UI: `http://localhost:8000/ui/orders/new`

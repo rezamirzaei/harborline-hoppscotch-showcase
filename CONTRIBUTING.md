@@ -40,6 +40,13 @@ make test        # Run all tests
 make test-cov    # Run tests with coverage report
 ```
 
+### Hoppscotch Contract Tests (Recommended)
+Use the committed Hoppscotch collection as an end-to-end regression suite (REST + scripts + idempotency + webhooks + GraphQL).
+```bash
+make hopp           # Spins up a temporary API instance and runs the collection
+make hopp-existing  # Runs against an already running API (PORT=8000 by default)
+```
+
 ### Code Quality
 ```bash
 make lint        # Check for linting errors

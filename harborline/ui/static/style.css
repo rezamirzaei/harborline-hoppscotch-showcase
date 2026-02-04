@@ -150,6 +150,13 @@ body {
   border: 1px solid var(--outline);
 }
 
+.card.inset {
+  box-shadow: none;
+  background: rgba(15, 23, 42, 0.02);
+  border-radius: 16px;
+  padding: 16px;
+}
+
 .card.highlight {
   display: flex;
   align-items: center;
@@ -173,6 +180,21 @@ body {
   min-height: 180px;
   overflow: auto;
   border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--accent);
+  margin-top: 8px;
+}
+
+.details[open] summary {
+  margin-bottom: 12px;
+}
+
+.details pre {
+  margin: 0;
 }
 
 .field {
@@ -224,6 +246,11 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+}
+
+.page-header .form-actions {
+  margin-top: 0;
+  flex-wrap: wrap;
 }
 
 .page-header h1 {

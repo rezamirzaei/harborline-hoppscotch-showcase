@@ -6,7 +6,9 @@
     <h1>GraphQL Console</h1>
     <p>Run live queries against the Harborline GraphQL endpoint and compare with Hoppscotch.</p>
   </div>
-  <a class="button secondary" href="http://localhost:3000" target="_blank">Open Hoppscotch</a>
+  {% if hoppscotch_app_url %}
+    <a class="button secondary" href="{{ hoppscotch_app_url }}" target="_blank">Open Hoppscotch</a>
+  {% endif %}
 </section>
 
 <section class="grid split">

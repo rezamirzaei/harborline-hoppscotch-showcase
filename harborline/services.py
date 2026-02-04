@@ -47,6 +47,7 @@ from .domain import (
 )
 from .errors import NotFoundError, UnauthorizedError, ValidationError
 from .id_provider import IdProvider
+from .graph.projector import OrderProjector
 from .repositories import EventBus, IdempotencyRepository, InventoryRepository, OrderRepository, PaymentRepository
 from .settings import Settings
 
@@ -83,12 +84,14 @@ class OrderService:
         events: EventBus,
         clock: Clock,
         ids: IdProvider,
+        projector: OrderProjector,
     ) -> None:
         self._orders = orders
         self._idempotency = idempotency
         self._events = events
         self._clock = clock
         self._ids = ids
+        self._projector = projector
 
     def create_order(self, payload: CreateOrderInput) -> CreateOrderResult:
         if payload.idempotency_key:
@@ -98,6 +101,7 @@ class OrderService:
 
         order = self._build_order(payload.order)
         self._orders.add(order)
+        self._projector.project_order(order)
         if payload.idempotency_key:
             self._idempotency.set(IdempotencyRecord(key=payload.idempotency_key, order=order))
         self._publish_event(EventType.ORDER_CREATED, {"order_id": order.id, "status": order.status.value})
@@ -115,6 +119,7 @@ class OrderService:
     def update_status(self, order: Order, status: OrderStatus) -> Order:
         updated = order.model_copy(update={"status": status, "updated_at": self._clock.now()})
         self._orders.update(updated)
+        self._projector.project_order(updated)
         return updated
 
     def mark_paid(self, payload: PaymentSucceeded) -> OrderStatusUpdate:
@@ -137,6 +142,7 @@ class OrderService:
             currency=payload.currency,
             items=payload.items,
             total=total,
+            note=payload.note,
             created_at=now,
             updated_at=now,
         )

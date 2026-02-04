@@ -13,7 +13,7 @@
 {% endif %}
 
 <section class="card form-card">
-  <form method="post" action="/ui/orders">
+  <form method="post" action="/ui/orders" data-order-builder>
     <div class="form-grid">
       <label>
         Customer ID
@@ -26,8 +26,16 @@
     </div>
     <label>
       Items JSON
-      <textarea name="items_json" rows="8" required>{{ sample }}</textarea>
+      <textarea id="order-items-json" name="items_json" rows="8" required>{{ sample }}</textarea>
     </label>
+    <div class="card inset">
+      <div class="card-header">
+        <h2>Preview</h2>
+        <span id="order-preview-total" class="muted"></span>
+      </div>
+      <div id="order-preview-error" class="alert" hidden></div>
+      <div id="order-preview-table" class="table"></div>
+    </div>
     <div class="form-actions">
       <button class="button" type="submit">Create Order</button>
       <a class="button secondary" href="/ui/orders">Cancel</a>

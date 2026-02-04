@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="page-header">
+  <div>
+    <h1>Insights</h1>
+    <p>Cross-sell and bundle suggestions powered by a purchase graph. No query editing — one click runs the insight.</p>
+  </div>
+  <div class="form-actions">
+    <a class="button secondary" href="/ui/hoppscotch">Hoppscotch Lab</a>
+    {% if hoppscotch_app_url %}
+      <a class="button tertiary" href="{{ hoppscotch_app_url }}" target="_blank">Open Hoppscotch</a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="card highlight" data-graph-seed>
+  <div>
+    <h2>Demo dataset (recommended)</h2>
+    <p>Create two real orders that share <code>SKU-BLUE-LAMP</code>. The UI then auto-runs the insights below.</p>
+    {% if graph_active %}
+      <p class="muted">Graph backend: <strong>Neo4j active</strong>.</p>
+    {% elif graph_configured %}
+      <p class="muted">Graph backend: <strong>configured</strong> but unreachable (fallback mode).</p>
+    {% else %}
+      <p class="muted">Graph backend: <strong>disabled</strong> (fallback mode).</p>
+    {% endif %}
+    <div id="graph-seed-status" class="muted"></div>
+  </div>
+  <div class="form-actions">
+    <button class="button" id="graph-seed-run" type="button">Seed + Run Insights</button>
+    <a class="button secondary" href="/ui/orders/new">Create Order Manually</a>
+  </div>
+</section>
+
+<section class="grid split">
+  <div class="card console" data-graph-customer>
+    <h2>Cross-sell (customer)</h2>
+    <p class="muted">Example: after checkout, the storefront asks for “next best items” for this customer.</p>
+    <label class="field">
+      <span>Customer ID</span>
+      <input id="reco-customer-id" type="text" list="customer-id-options" value="{{ default_customer_id }}" placeholder="cust-001" />
+      <datalist id="customer-id-options">
+        {% for cid in customer_ids %}
+          <option value="{{ cid }}"></option>
+        {% endfor %}
+      </datalist>
+    </label>
+    <label class="field">
+      <span>Limit</span>
+      <input id="reco-limit" type="number" min="1" max="50" value="{{ default_customer_limit }}" />
+    </label>
+    <div class="form-actions">
+      <button class="button" id="reco-run" type="button">Fetch Insight</button>
+      <button class="button secondary" id="reco-clear" type="button">Clear</button>
+    </div>
+    <details class="details">
+      <summary>Advanced: show underlying GraphQL request</summary>
+      <textarea id="reco-query" class="code-block" readonly>{{ reco_query }}</textarea>
+    </details>
+  </div>
+  <div class="card console">
+    <h2>Response</h2>
+    <div id="reco-meta" class="muted">Run the query to see recommended SKUs.</div>
+    <div id="reco-table" class="table"></div>
+    <details class="details">
+      <summary>Raw JSON</summary>
+      <pre id="reco-output" class="code-block"></pre>
+    </details>
+  </div>
+</section>
+
+<section class="grid split">
+  <div class="card console" data-graph-sku>
+    <h2>Bundle suggestion (SKU)</h2>
+    <p class="muted">Example: “customers who bought this item also bought…”.</p>
+    <label class="field">
+      <span>SKU</span>
+      <input id="also-sku" type="text" list="sku-options" value="{{ default_sku }}" placeholder="SKU-BLUE-LAMP" />
+      <datalist id="sku-options">
+        {% for sku in skus %}
+          <option value="{{ sku }}"></option>
+        {% endfor %}
+      </datalist>
+    </label>
+    <label class="field">
+      <span>Limit</span>
+      <input id="also-limit" type="number" min="1" max="50" value="{{ default_sku_limit }}" />
+    </label>
+    <div class="form-actions">
+      <button class="button" id="also-run" type="button">Fetch Insight</button>
+      <button class="button secondary" id="also-clear" type="button">Clear</button>
+    </div>
+    <details class="details">
+      <summary>Advanced: show underlying GraphQL request</summary>
+      <textarea id="also-query" class="code-block" readonly>{{ also_query }}</textarea>
+    </details>
+  </div>
+  <div class="card console">
+    <h2>Response</h2>
+    <div id="also-meta" class="muted">Run the query to see co-purchased SKUs.</div>
+    <div id="also-table" class="table"></div>
+    <details class="details">
+      <summary>Raw JSON</summary>
+      <pre id="also-output" class="code-block"></pre>
+    </details>
+  </div>
+</section>
+
+<section class="card inset">
+  <h2>Run the same insights in Hoppscotch</h2>
+  <p class="muted">
+    Import the
+    <a class="link" href="/hoppscotch/harborline.collection.json">collection</a>
+    and
+    <a class="link" href="/hoppscotch/harborline.environment.json">environment</a>,
+    then run folder <code>40 - GraphQL Analytics</code> to compare results (no query editing required).
+  </p>
+</section>
+{% endblock %}

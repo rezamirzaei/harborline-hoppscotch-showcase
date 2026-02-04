@@ -1,4 +1,4 @@
-.PHONY: help install dev test lint format check docker-build docker-up docker-down clean
+.PHONY: help install dev test lint format check docker-build docker-up docker-down clean hopp hopp-existing
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
@@ -41,6 +41,12 @@ docker-logs: ## View docker-compose logs
 
 run: ## Run the API locally
 	uvicorn harborline.main:app --reload --host 0.0.0.0 --port 8000
+
+hopp: ## Run Hoppscotch CLI collection (spins up temporary API)
+	./scripts/run_hoppscotch_cli.sh
+
+hopp-existing: ## Run Hoppscotch CLI collection against an already running API
+	USE_EXISTING_SERVER=1 PORT=8000 ./scripts/run_hoppscotch_cli.sh
 
 clean: ## Clean up cache files
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true

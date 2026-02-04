@@ -62,12 +62,13 @@
     <div class="page-header">
       <div>
         <h2>Realtime (SSE + WebSocket)</h2>
-        <p>Hoppscotch → Realtime: connect and then create an order to watch events stream.</p>
+        <p>Hoppscotch → Realtime: connect and then run the Live Ops simulator request to watch events stream.</p>
       </div>
     </div>
     <ul>
       <li>SSE: <code>/stream/orders</code> (full URL: <code>http://localhost:8000/stream/orders</code>)</li>
       <li>WS: <code>/ws/shipments</code> (full URL: <code>ws://localhost:8000/ws/shipments</code>)</li>
+      <li>Request: collection folder <code>05 - Live Ops (Realtime Debug)</code> → <code>Run Ops Simulator</code></li>
     </ul>
   </section>
 
@@ -83,6 +84,7 @@
       <li>Pre-request scripts generate idempotency keys and compute webhook HMAC signatures.</li>
       <li>Test scripts assert headers + state transitions and store IDs for downstream requests.</li>
       <li>The Runner executes the entire workflow in one click (UI) or in CI (CLI).</li>
+      <li>REST calls use the versioned <code>/v1</code> base while GraphQL stays at <code>/graphql</code>.</li>
       <li>GraphQL works side-by-side with REST using the same environment context.</li>
       <li>Realtime tooling helps ops teams debug event streams (SSE + WebSocket) live.</li>
     </ul>

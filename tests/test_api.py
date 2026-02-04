@@ -247,6 +247,101 @@ class TestGraphQL:
         assert "data" in data
         assert "orders" in data["data"]
 
+    def test_graphql_recommendations_query(self):
+        headers = auth_headers()
+        order_a = {
+            "customer_id": "cust-graph-reco-a",
+            "currency": "USD",
+            "items": [
+                {"sku": "SKU-RED-CHAIR", "qty": 1, "unit_price": 49.99},
+                {"sku": "SKU-BLUE-LAMP", "qty": 1, "unit_price": 19.99},
+            ],
+        }
+        order_b = {
+            "customer_id": "cust-graph-reco-b",
+            "currency": "USD",
+            "items": [
+                {"sku": "SKU-WHITE-DESK", "qty": 1, "unit_price": 199.0},
+                {"sku": "SKU-BLUE-LAMP", "qty": 1, "unit_price": 19.99},
+            ],
+        }
+        assert client.post("/orders", json=order_a, headers=headers).status_code == 200
+        assert client.post("/orders", json=order_b, headers=headers).status_code == 200
+
+        query = """
+        query Recommendations($customerId: String!, $limit: Int!) {
+            recommendations(customerId: $customerId, limit: $limit) {
+                customerId
+                source
+                items {
+                    sku
+                    score
+                    evidence
+                }
+            }
+        }
+        """
+        response = client.post(
+            "/graphql",
+            json={"query": query, "variables": {"customerId": "cust-graph-reco-a", "limit": 50}},
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        recos = payload["data"]["recommendations"]
+        assert recos["customerId"] == "cust-graph-reco-a"
+        assert recos["source"] in ("graph", "fallback")
+        skus = [item["sku"] for item in recos["items"]]
+        assert "SKU-WHITE-DESK" in skus
+        desk = next(item for item in recos["items"] if item["sku"] == "SKU-WHITE-DESK")
+        assert "SKU-BLUE-LAMP" in desk["evidence"]
+
+    def test_graphql_also_bought_query(self):
+        headers = auth_headers()
+        order_a = {
+            "customer_id": "cust-also-bought-a",
+            "currency": "USD",
+            "items": [
+                {"sku": "SKU-RED-CHAIR", "qty": 1, "unit_price": 49.99},
+                {"sku": "SKU-BLUE-LAMP", "qty": 1, "unit_price": 19.99},
+            ],
+        }
+        order_b = {
+            "customer_id": "cust-also-bought-b",
+            "currency": "USD",
+            "items": [
+                {"sku": "SKU-WHITE-DESK", "qty": 1, "unit_price": 199.0},
+                {"sku": "SKU-BLUE-LAMP", "qty": 1, "unit_price": 19.99},
+            ],
+        }
+        assert client.post("/orders", json=order_a, headers=headers).status_code == 200
+        assert client.post("/orders", json=order_b, headers=headers).status_code == 200
+
+        query = """
+        query AlsoBought($sku: String!, $limit: Int!) {
+            alsoBought(sku: $sku, limit: $limit) {
+                sku
+                source
+                items {
+                    sku
+                    score
+                    evidence
+                }
+            }
+        }
+        """
+        response = client.post(
+            "/graphql",
+            json={"query": query, "variables": {"sku": "SKU-BLUE-LAMP", "limit": 50}},
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        data = payload["data"]["alsoBought"]
+        assert data["sku"] == "SKU-BLUE-LAMP"
+        assert data["source"] in ("graph", "fallback")
+        skus = [item["sku"] for item in data["items"]]
+        assert "SKU-RED-CHAIR" in skus
+        assert "SKU-WHITE-DESK" in skus
+
 
 # Keep backwards compatibility with old test names
 def test_health():

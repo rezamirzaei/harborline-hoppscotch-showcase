@@ -79,7 +79,7 @@ else
   fi
 
   temp_env="/tmp/harborline.hopp.env.${PORT}.json"
-  python -c "import json; from pathlib import Path; src=Path('${ENV_PATH}'); data=json.loads(src.read_text(encoding='utf-8')); data['BASE_URL']='http://localhost:${PORT}'; Path('${temp_env}').write_text(json.dumps(data, indent=2), encoding='utf-8'); print('Using temp env:', '${temp_env}')"
+  python -c "import json; from pathlib import Path; host='${HOST}'; port=int('${PORT}'); src=Path('${ENV_PATH}'); data=json.loads(src.read_text(encoding='utf-8')); root=f'http://{host}:{port}'; data['ROOT_URL']=root; data['BASE_URL']=root + '/v1'; data['GRAPHQL_URL']=root + '/graphql'; data['SSE_URL']=root + '/stream/orders'; data['WS_URL']=f'ws://{host}:{port}/ws/shipments'; Path('${temp_env}').write_text(json.dumps(data, indent=2), encoding='utf-8'); print('Using temp env:', '${temp_env}')"
   ENV_PATH="${temp_env}"
 fi
 

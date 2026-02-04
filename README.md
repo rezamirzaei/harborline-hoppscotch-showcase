@@ -23,11 +23,19 @@ Harborline is a marketplace that coordinates orders, inventory, and payments whi
 Browser (Hoppscotch UI)
    |  REST / GraphQL / SSE / WS
    v
-FastAPI (Commerce Core)  <--- in-memory data for demo
+FastAPI (Commerce Core)  <--- in-memory by default, Postgres optional
    ^
    |
 Hoppscotch AIO + Postgres
 ```
+
+## Production-grade add-ons (optional)
+- **API versioning:** REST is available under `http://localhost:8000/v1` (legacy unversioned paths also work).
+- **Database persistence:** set `DATABASE_URL` to use SQLAlchemy + Postgres (Docker Compose config wires this by default).
+- **Graph analytics:** set `GRAPH_DB_URI` / `GRAPH_DB_PASSWORD` to enable Neo4j-backed recommendations (Docker Compose wires this by default).
+- **Rate limiting:** enable with `RATE_LIMIT_ENABLED=true` (uses `slowapi`).
+- **OpenTelemetry tracing:** enable with `OTEL_ENABLED=true` (exports to OTLP if `OTEL_EXPORTER_OTLP_ENDPOINT` is set).
+- **Pre-commit hooks:** run `pre-commit install` to enforce formatting/linting.
 
 ## Hoppscotch Importables (ready-made)
 You don't have to build requests manually — import these:
@@ -54,8 +62,12 @@ docker compose up -d
 
 Config notes:
 - `config/api.env` is the single source for API configuration (no hard-coded values).
+- `DATABASE_URL` enables SQL persistence (otherwise the demo uses in-memory stores).
+- `GRAPH_DB_URI` / `GRAPH_DB_PASSWORD` enable Neo4j-backed graph analytics (otherwise the API falls back to in-memory recommendations).
 - `INVENTORY_SEED_PATH` points to the inventory seed JSON.
 - `DOCUMENT_PREFIX` controls the document storage key prefix.
+- `RATE_LIMIT_ENABLED` / `RATE_LIMIT_DEFAULT` control API rate limiting.
+- `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` control tracing.
 - Override the env file path with `HARBORLINE_ENV_FILE=/path/to/api.env`.
 
 2) Hoppscotch URLs
@@ -65,18 +77,21 @@ Config notes:
 
 3) API URLs
 
-- REST: http://localhost:8000
+- REST (v1): http://localhost:8000/v1
+- REST (legacy): http://localhost:8000
 - OpenAPI: http://localhost:8000/openapi.json
 - GraphQL: http://localhost:8000/graphql
 - SSE: http://localhost:8000/stream/orders
 - WebSocket: ws://localhost:8000/ws/shipments
+- Neo4j Browser: http://localhost:7474 (user: `neo4j`, password: `harborline`)
 
 4) Harborline UI (MVC)
 
 - Console: http://localhost:8000/ui
 - Hoppscotch lab: http://localhost:8000/ui/hoppscotch
-- GraphQL console: http://localhost:8000/ui/graphql
-- Realtime lab (SSE + WS): http://localhost:8000/ui/realtime
+- Insights (one-click cross-sell + bundles; Neo4j-backed when enabled): http://localhost:8000/ui/graph
+- Live Ops (workflow simulator + SSE + WS streams): http://localhost:8000/ui/realtime
+- (Advanced) GraphQL console: http://localhost:8000/ui/graphql
 
 ## Hoppscotch Deep-Dive Runbook
 
@@ -95,14 +110,16 @@ Run folders in order (00 → 40). The collection demonstrates:
 - partner key auth for inventory reservation (`X-API-Key`)
 - payment intent + capture
 - signed webhooks (HMAC SHA-256) created in a pre-request script
-- GraphQL metrics + order lookup
+- GraphQL metrics + order lookup + graph analytics (recommendations / also-bought)
 
 ### 3) Realtime (SSE + WebSocket) in Hoppscotch
 Hoppscotch → Realtime:
 - SSE: `http://localhost:8000/stream/orders`
 - WS: `ws://localhost:8000/ws/shipments`
 
-Create an order to watch events stream into both connections.
+Fastest way to generate events:
+- Run collection folder `05 - Live Ops (Realtime Debug)` → request `Run Ops Simulator`
+- Or create an order in the Harborline UI and progress it to payment
 
 ## CI/CD
 
@@ -124,6 +141,12 @@ Optional CLI secrets (enable the job):
 ## Local Development (without Docker)
 
 ```bash
+MODE=python ./scripts/run_local.sh
+```
+
+Or run the full stack (API + Postgres + Neo4j + Hoppscotch) via Docker Compose:
+
+```bash
 ./scripts/run_local.sh
 ```
 
@@ -131,8 +154,13 @@ Run the Hoppscotch collection headlessly (spins up an isolated API instance on a
 ```bash
 ./scripts/run_hoppscotch_cli.sh
 ```
+Or:
+```bash
+make hopp
+```
 
 ## Notes
-- All data is in-memory for demo simplicity; restart resets data.
+- If `DATABASE_URL` is unset, the demo uses in-memory stores; restart resets data.
+- Docker Compose sets `DATABASE_URL` to Postgres so state persists across restarts.
 - Inventory will deplete if you run the flow many times without restarting the API.
 - Update secrets for any non-demo use.

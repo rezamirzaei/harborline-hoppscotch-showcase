@@ -1,6 +1,16 @@
 {
   "graphql_query": "query {\n  metrics {\n    totalOrders\n    totalRevenue\n    paidOrders\n  }\n}\n",
   "graphql_variables": {},
+  "graph_customer_recommendations_query": "query Recommendations($customerId: String!, $limit: Int!) {\n  recommendations(customerId: $customerId, limit: $limit) {\n    customerId\n    source\n    generatedAt\n    items {\n      sku\n      score\n      evidence\n    }\n  }\n}\n",
+  "graph_customer_recommendations_variables": {
+    "customerId": "cust-001",
+    "limit": 5
+  },
+  "graph_also_bought_query": "query AlsoBought($sku: String!, $limit: Int!) {\n  alsoBought(sku: $sku, limit: $limit) {\n    sku\n    source\n    generatedAt\n    items {\n      sku\n      score\n      evidence\n    }\n  }\n}\n",
+  "graph_also_bought_variables": {
+    "sku": "SKU-BLUE-LAMP",
+    "limit": 5
+  },
   "order_items_sample": [
     {"sku": "SKU-RED-CHAIR", "qty": 2, "unit_price": 49.99},
     {"sku": "SKU-BLUE-LAMP", "qty": 1, "unit_price": 19.99}

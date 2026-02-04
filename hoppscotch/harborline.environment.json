@@ -4,9 +4,15 @@
   "name": "Harborline (Local)",
   "variables": [
     {
-      "key": "BASE_URL",
+      "key": "ROOT_URL",
       "initialValue": "http://localhost:8000",
       "currentValue": "http://localhost:8000",
+      "secret": false
+    },
+    {
+      "key": "BASE_URL",
+      "initialValue": "<<ROOT_URL>>/v1",
+      "currentValue": "<<ROOT_URL>>/v1",
       "secret": false
     },
     {
@@ -118,15 +124,27 @@
       "secret": true
     },
     {
+      "key": "SIM_ORDER_ID",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
+      "key": "SIM_PAYMENT_ID",
+      "initialValue": "",
+      "currentValue": "",
+      "secret": false
+    },
+    {
       "key": "GRAPHQL_URL",
-      "initialValue": "<<BASE_URL>>/graphql",
-      "currentValue": "<<BASE_URL>>/graphql",
+      "initialValue": "<<ROOT_URL>>/graphql",
+      "currentValue": "<<ROOT_URL>>/graphql",
       "secret": false
     },
     {
       "key": "SSE_URL",
-      "initialValue": "<<BASE_URL>>/stream/orders",
-      "currentValue": "<<BASE_URL>>/stream/orders",
+      "initialValue": "<<ROOT_URL>>/stream/orders",
+      "currentValue": "<<ROOT_URL>>/stream/orders",
       "secret": false
     },
     {

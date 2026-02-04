@@ -2,11 +2,11 @@
   "v": 2,
   "name": "Harborline Commerce Core (Hoppscotch Deep Dive)",
   "folders": [
-    {
-      "v": 2,
-      "name": "00 - Setup",
-      "folders": [],
-      "requests": [
+	    {
+	      "v": 2,
+	      "name": "00 - Setup",
+	      "folders": [],
+	      "requests": [
         {
           "v": "3",
           "name": "Health Check",
@@ -49,14 +49,65 @@
       "auth": {
         "authType": "inherit",
         "authActive": true
-      },
-      "headers": []
-    },
-    {
-      "v": 2,
-      "name": "10 - Order A (Idempotency + Inventory)",
-      "folders": [],
-      "requests": [
+	      },
+	      "headers": []
+	    },
+	    {
+	      "v": 2,
+	      "name": "05 - Live Ops (Realtime Debug)",
+	      "folders": [],
+	      "requests": [
+	        {
+	          "v": "3",
+	          "name": "Run Ops Simulator (watch SSE_URL + WS_URL in Hoppscotch Realtime)",
+	          "endpoint": "<<ROOT_URL>>/ui/realtime/simulate",
+	          "method": "POST",
+	          "headers": [],
+	          "params": [],
+	          "auth": {
+	            "authType": "none",
+	            "authActive": true
+	          },
+	          "body": {
+	            "contentType": null,
+	            "body": null
+	          },
+	          "preRequestScript": "",
+	          "testScript": "pw.test(\"Ops workflow completes\", () => { pw.expect(pw.response.status).toBe(200); const body = pw.response.body; pw.expect(body.order.id).toBeType(\"string\"); pw.expect(body.order.status).toBe(\"paid\"); pw.expect(body.reservation_status).toBe(\"reserved\"); pw.expect(body.payment.id).toBeType(\"string\"); pw.expect(body.payment.status).toBe(\"succeeded\"); }); pw.env.set(\"SIM_ORDER_ID\", pw.response.body.order.id); pw.env.set(\"SIM_PAYMENT_ID\", pw.response.body.payment.id);",
+	          "requestVariables": []
+	        },
+	        {
+	          "v": "3",
+	          "name": "Get Simulated Order (REST, versioned)",
+	          "endpoint": "<<BASE_URL>>/orders/<<SIM_ORDER_ID>>",
+	          "method": "GET",
+	          "headers": [],
+	          "params": [],
+	          "auth": {
+	            "authType": "bearer",
+	            "authActive": true,
+	            "token": "<<AUTH_TOKEN>>"
+	          },
+	          "body": {
+	            "contentType": null,
+	            "body": null
+	          },
+	          "preRequestScript": "",
+	          "testScript": "pw.test(\"Simulated order is retrievable\", () => { pw.expect(pw.response.status).toBe(200); pw.expect(pw.response.body.id).toBe(pw.env.get(\"SIM_ORDER_ID\")); pw.expect(pw.response.body.status).toBe(\"paid\"); });",
+	          "requestVariables": []
+	        }
+	      ],
+	      "auth": {
+	        "authType": "inherit",
+	        "authActive": true
+	      },
+	      "headers": []
+	    },
+	    {
+	      "v": 2,
+	      "name": "10 - Order A (Idempotency + Inventory)",
+	      "folders": [],
+	      "requests": [
         {
           "v": "3",
           "name": "Create Order A (sets IDEM_A_KEY, stores ORDER_A_*)",
@@ -349,7 +400,7 @@
         {
           "v": "3",
           "name": "GraphQL - Metrics",
-          "endpoint": "<<BASE_URL>>/graphql",
+          "endpoint": "<<GRAPHQL_URL>>",
           "method": "POST",
           "headers": [],
           "params": [],
@@ -368,7 +419,7 @@
         {
           "v": "3",
           "name": "GraphQL - Order A lookup",
-          "endpoint": "<<BASE_URL>>/graphql",
+          "endpoint": "<<GRAPHQL_URL>>",
           "method": "POST",
           "headers": [],
           "params": [],
@@ -382,6 +433,44 @@
           },
           "preRequestScript": "",
           "testScript": "pw.test(\"Order A available via GraphQL\", () => { pw.expect(pw.response.status).toBe(200); const order = pw.response.body.data.order; pw.expect(order.id).toBe(pw.env.get(\"ORDER_A_ID\")); pw.expect(order.status).toBe(\"paid\"); });",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "GraphQL - Recommendations for Customer A",
+          "endpoint": "<<GRAPHQL_URL>>",
+          "method": "POST",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"query\":\"query Recommendations($customerId: String!, $limit: Int!) { recommendations(customerId: $customerId, limit: $limit) { customerId source items { sku score evidence } } }\",\"variables\":{\"customerId\":\"<<CUSTOMER_A_ID>>\",\"limit\":5}}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Graph recommendations are available\", () => { pw.expect(pw.response.status).toBe(200); const recos = pw.response.body.data.recommendations; pw.expect([\"graph\",\"fallback\"].includes(recos.source)).toBe(true); const skus = recos.items.map((item) => item.sku); pw.expect(skus.includes(\"SKU-WHITE-DESK\")).toBe(true); const desk = recos.items.find((item) => item.sku === \"SKU-WHITE-DESK\"); pw.expect(desk.evidence.includes(\"SKU-BLUE-LAMP\")).toBe(true); });",
+          "requestVariables": []
+        },
+        {
+          "v": "3",
+          "name": "GraphQL - Also bought for SKU-BLUE-LAMP",
+          "endpoint": "<<GRAPHQL_URL>>",
+          "method": "POST",
+          "headers": [],
+          "params": [],
+          "auth": {
+            "authType": "none",
+            "authActive": true
+          },
+          "body": {
+            "contentType": "application/json",
+            "body": "{\"query\":\"query AlsoBought($sku: String!, $limit: Int!) { alsoBought(sku: $sku, limit: $limit) { sku source items { sku score evidence } } }\",\"variables\":{\"sku\":\"SKU-BLUE-LAMP\",\"limit\":5}}"
+          },
+          "preRequestScript": "",
+          "testScript": "pw.test(\"Also-bought analytics reflect co-purchases\", () => { pw.expect(pw.response.status).toBe(200); const data = pw.response.body.data.alsoBought; pw.expect([\"graph\",\"fallback\"].includes(data.source)).toBe(true); const skus = data.items.map((item) => item.sku); pw.expect(skus.includes(\"SKU-RED-CHAIR\")).toBe(true); pw.expect(skus.includes(\"SKU-WHITE-DESK\")).toBe(true); });",
           "requestVariables": []
         }
       ],
