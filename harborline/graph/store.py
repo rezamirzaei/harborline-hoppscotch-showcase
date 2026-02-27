@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional, Protocol
+from typing import Protocol
 
 from neo4j.exceptions import Neo4jError
 
@@ -12,9 +12,9 @@ from .domain import AlsoBoughtQuery, CustomerRecommendationsQuery, GraphWriteRes
 class GraphStore(Protocol):
     def upsert_order(self, order: Order) -> GraphWriteResult: ...
 
-    def recommend_for_customer(self, query: CustomerRecommendationsQuery) -> List[ProductRecommendation]: ...
+    def recommend_for_customer(self, query: CustomerRecommendationsQuery) -> list[ProductRecommendation]: ...
 
-    def also_bought(self, query: AlsoBoughtQuery) -> List[ProductRecommendation]: ...
+    def also_bought(self, query: AlsoBoughtQuery) -> list[ProductRecommendation]: ...
 
 
 class Neo4jGraphStore:
@@ -81,14 +81,14 @@ class Neo4jGraphStore:
         except (Neo4jError, Exception) as exc:
             return GraphWriteResult(ok=False, error=str(exc))
 
-    def recommend_for_customer(self, query: CustomerRecommendationsQuery) -> List[ProductRecommendation]:
+    def recommend_for_customer(self, query: CustomerRecommendationsQuery) -> list[ProductRecommendation]:
         rows = self._db.execute_read(
             self._RECOMMEND_FOR_CUSTOMER,
             {"customer_id": query.customer_id, "limit": query.limit},
         )
         return [_to_recommendation(row) for row in rows]
 
-    def also_bought(self, query: AlsoBoughtQuery) -> List[ProductRecommendation]:
+    def also_bought(self, query: AlsoBoughtQuery) -> list[ProductRecommendation]:
         rows = self._db.execute_read(
             self._ALSO_BOUGHT,
             {"sku": query.sku, "limit": query.limit},

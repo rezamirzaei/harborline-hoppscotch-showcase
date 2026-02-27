@@ -1,28 +1,31 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
-from typing import Any, Dict, List, Optional
+from enum import StrEnum
+from typing import Annotated, Any
 
-from pydantic import BaseModel, Field, conint, confloat
+from pydantic import BaseModel, Field
+
+PositiveInt = Annotated[int, Field(gt=0)]
+PositiveFloat = Annotated[float, Field(gt=0)]
 
 
-class OrderStatus(str, Enum):
+class OrderStatus(StrEnum):
     CREATED = "created"
     RESERVED = "reserved"
     PAID = "paid"
 
 
-class PaymentStatus(str, Enum):
+class PaymentStatus(StrEnum):
     REQUIRES_CAPTURE = "requires_capture"
     SUCCEEDED = "succeeded"
 
 
-class PaymentMethod(str, Enum):
+class PaymentMethod(StrEnum):
     CARD = "card"
 
 
-class EventType(str, Enum):
+class EventType(StrEnum):
     ORDER_CREATED = "order.created"
     INVENTORY_RESERVED = "inventory.reserved"
     PAYMENT_INTENT_CREATED = "payment.intent_created"
@@ -56,15 +59,15 @@ class PartnerAuth(BaseModel):
 
 class OrderItem(BaseModel):
     sku: str
-    qty: conint(gt=0)
-    unit_price: confloat(gt=0)
+    qty: PositiveInt
+    unit_price: PositiveFloat
 
 
 class OrderCreate(BaseModel):
     customer_id: str
     currency: str = Field(min_length=3, max_length=3)
-    items: List[OrderItem]
-    note: Optional[str] = None
+    items: list[OrderItem]
+    note: str | None = None
 
 
 class Order(BaseModel):
@@ -72,19 +75,19 @@ class Order(BaseModel):
     customer_id: str
     status: OrderStatus
     currency: str
-    items: List[OrderItem]
+    items: list[OrderItem]
     total: float
-    note: Optional[str] = None
+    note: str | None = None
     created_at: datetime
     updated_at: datetime
 
 
 class OrderList(BaseModel):
-    items: List[Order]
+    items: list[Order]
 
 
 class OrderQuery(BaseModel):
-    status: Optional[OrderStatus] = None
+    status: OrderStatus | None = None
     limit: int = 50
 
 
@@ -94,7 +97,7 @@ class OrderLookup(BaseModel):
 
 class CreateOrderInput(BaseModel):
     order: OrderCreate
-    idempotency_key: Optional[str] = None
+    idempotency_key: str | None = None
 
 
 class CreateOrderResult(BaseModel):
@@ -109,7 +112,7 @@ class OrderStatusUpdate(BaseModel):
 
 class InventoryReservation(BaseModel):
     order_id: str
-    items: List[OrderItem]
+    items: list[OrderItem]
 
 
 class InventoryRequestItem(BaseModel):
@@ -129,13 +132,13 @@ class InventoryItem(BaseModel):
 
 
 class InventorySnapshot(BaseModel):
-    items: List[InventoryItem]
+    items: list[InventoryItem]
 
 
 class InventoryReservationResult(BaseModel):
     order_id: str
     status: OrderStatus
-    shortages: List[InventoryShortage] = Field(default_factory=list)
+    shortages: list[InventoryShortage] = Field(default_factory=list)
 
 
 class InventoryLookup(BaseModel):
@@ -144,7 +147,7 @@ class InventoryLookup(BaseModel):
 
 class PaymentIntentCreate(BaseModel):
     order_id: str
-    amount: confloat(gt=0)
+    amount: PositiveFloat
     method: PaymentMethod = PaymentMethod.CARD
     capture: bool = False
 
@@ -159,7 +162,7 @@ class PaymentIntent(BaseModel):
 
 
 class PaymentIntentList(BaseModel):
-    items: List[PaymentIntent]
+    items: list[PaymentIntent]
 
 
 class PaymentCapture(BaseModel):
@@ -179,7 +182,7 @@ class PaymentSucceeded(BaseModel):
 
 class WebhookEvent(BaseModel):
     type: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
 
 
 class WebhookRequest(BaseModel):
@@ -193,13 +196,13 @@ class WebhookReceipt(BaseModel):
 
 class DocumentUploadInput(BaseModel):
     filename: str
-    content_type: Optional[str]
+    content_type: str | None
     content: bytes
 
 
 class DocumentUploadResult(BaseModel):
     filename: str
-    content_type: Optional[str]
+    content_type: str | None
     size: int
     storage_key: str
 
@@ -220,7 +223,7 @@ class EventMessage(BaseModel):
     id: str
     type: str
     timestamp: datetime
-    payload: Dict[str, Any]
+    payload: dict[str, Any]
 
 
 class IdempotencyRecord(BaseModel):

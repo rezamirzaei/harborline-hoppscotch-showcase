@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, Depends, File, Header, HTTPException, Request, UploadFile
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -22,10 +20,10 @@ from ..domain import (
     DocumentUploadInput,
     DocumentUploadResult,
     HealthStatus,
+    InventoryItem,
     InventoryLookup,
     InventoryReservation,
     InventoryReservationResult,
-    InventoryItem,
     LoginRequest,
     Order,
     OrderCreate,
@@ -35,10 +33,10 @@ from ..domain import (
     PartnerAuth,
     PaymentCapture,
     PaymentCaptureResult,
-    PaymentIntentCreate,
     PaymentIntent,
-    TokenResponse,
+    PaymentIntentCreate,
     TokenInput,
+    TokenResponse,
     WebhookReceipt,
     WebhookRequest,
 )
@@ -87,7 +85,7 @@ async def login(payload: LoginRequest, auth: AuthService = Depends(get_auth_serv
 
 @router.get("/orders", response_model=list[Order])
 async def list_orders(
-    status: Optional[str] = None,
+    status: str | None = None,
     limit: int = 50,
     _: AuthContext = Depends(auth_context),
     service: OrderService = Depends(get_order_service),
@@ -112,7 +110,7 @@ async def get_order(
 @router.post("/orders", response_model=Order)
 async def create_order(
     payload: OrderCreate,
-    idempotency_key: Optional[str] = Header(None, alias="Idempotency-Key"),
+    idempotency_key: str | None = Header(None, alias="Idempotency-Key"),
     settings: Settings = Depends(get_settings),
     _: AuthContext = Depends(auth_context),
     service: OrderService = Depends(get_order_service),
@@ -197,4 +195,3 @@ async def upload_document(
             content=content,
         )
     )
-

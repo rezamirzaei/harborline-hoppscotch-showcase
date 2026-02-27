@@ -17,4 +17,3 @@ def seed_inventory_if_empty(db: Database, seed_path: str) -> None:
         if existing:
             return
         session.add_all([InventoryItemRecord(sku=item.sku, available=item.available) for item in items])
-

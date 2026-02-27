@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
 
 from .clock import Clock, SystemClock
 from .graph.db import GraphDb
@@ -18,11 +17,15 @@ from .persistence.repositories import (
 )
 from .persistence.seed import seed_inventory_if_empty
 from .repositories import (
+    IdempotencyRepository,
     InMemoryEventBus,
     InMemoryIdempotencyRepository,
     InMemoryInventoryRepository,
     InMemoryOrderRepository,
     InMemoryPaymentRepository,
+    InventoryRepository,
+    OrderRepository,
+    PaymentRepository,
 )
 from .seed import load_inventory_seed
 from .services import (
@@ -51,8 +54,8 @@ class Container:
     event_bus: InMemoryEventBus
     clock: Clock
     id_provider: IdProvider
-    db: Optional[Database] = None
-    graph_db: Optional[GraphDb] = None
+    db: Database | None = None
+    graph_db: GraphDb | None = None
 
 
 def build_container(settings: Settings) -> Container:
@@ -60,10 +63,14 @@ def build_container(settings: Settings) -> Container:
     ids = UUIDProvider()
 
     event_bus = InMemoryEventBus()
-    db: Optional[Database] = None
-    graph_db: Optional[GraphDb] = None
+    db: Database | None = None
+    graph_db: GraphDb | None = None
     graph_store = None
     projector: OrderProjector = NoOpOrderProjector(clock)
+    orders: OrderRepository
+    payments: PaymentRepository
+    inventory: InventoryRepository
+    idempotency: IdempotencyRepository
 
     if settings.database_url:
         db = Database(settings.database_url, echo=settings.db_echo)

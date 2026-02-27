@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from neo4j import Driver, GraphDatabase
 
@@ -11,7 +11,7 @@ class GraphDb:
     uri: str
     user: str
     password: str
-    database: Optional[str] = None
+    database: str | None = None
     driver: Driver = field(init=False)
 
     def __post_init__(self) -> None:
@@ -23,12 +23,12 @@ class GraphDb:
     def close(self) -> None:
         self.driver.close()
 
-    def execute_write(self, cypher: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def execute_write(self, cypher: str, parameters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         params = parameters or {}
         with self.driver.session(database=self.database) as session:
             return session.execute_write(lambda tx: tx.run(cypher, params).data())
 
-    def execute_read(self, cypher: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+    def execute_read(self, cypher: str, parameters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         params = parameters or {}
         with self.driver.session(database=self.database) as session:
             return session.execute_read(lambda tx: tx.run(cypher, params).data())
@@ -41,4 +41,3 @@ class GraphDb:
         ]
         for statement in constraints:
             self.execute_write(statement)
-

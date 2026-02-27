@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional, Protocol
+from typing import Protocol
 
 from ..clock import Clock
 from ..domain import Order
@@ -39,4 +39,3 @@ class GraphOrderProjector:
             projected_at=self._clock.now(),
             write=write,
         )
-

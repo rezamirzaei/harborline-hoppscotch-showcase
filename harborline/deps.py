@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import cast
+
 from fastapi import Depends, Request
 
 from .container import Container
@@ -12,13 +14,14 @@ from .services import (
     PaymentService,
     WebhookService,
 )
+from .settings import Settings
 
 
 def get_container(request: Request) -> Container:
-    return request.app.state.container
+    return cast(Container, request.app.state.container)
 
 
-def get_settings(container: Container = Depends(get_container)):
+def get_settings(container: Container = Depends(get_container)) -> Settings:
     return container.settings
 
 

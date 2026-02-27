@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import List, Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -44,11 +43,11 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(extra="ignore")
 
     @property
-    def allowed_origins(self) -> List[str]:
+    def allowed_origins(self) -> list[str]:
         return [origin.strip() for origin in self.cors_allow_origins.split(",") if origin.strip()]
 
 
-def resolve_env_file() -> Optional[Path]:
+def resolve_env_file() -> Path | None:
     explicit = os.getenv("HARBORLINE_ENV_FILE")
     if explicit:
         return Path(explicit)

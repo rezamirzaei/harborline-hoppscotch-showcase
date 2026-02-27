@@ -37,8 +37,8 @@ from .domain import (
     TokenInput,
     TokenResponse,
     WebhookEvent,
-    WebhookRequest,
     WebhookReceipt,
+    WebhookRequest,
 )
 
 __all__ = [

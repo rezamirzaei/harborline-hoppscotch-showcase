@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter, defaultdict
-from typing import Dict, Iterable, List, Optional, Set, Tuple
+from collections.abc import Iterable
 
 from ..clock import Clock
 from ..domain import Order
@@ -23,7 +23,7 @@ class GraphAnalyticsService:
         *,
         orders: OrderRepository,
         clock: Clock,
-        graph_store: Optional[GraphStore] = None,
+        graph_store: GraphStore | None = None,
         max_orders: int = 2000,
     ) -> None:
         self._orders = orders
@@ -75,7 +75,7 @@ class GraphAnalyticsService:
             items=items,
         )
 
-    def _fallback_recommend_for_customer(self, query: CustomerRecommendationsQuery) -> List[ProductRecommendation]:
+    def _fallback_recommend_for_customer(self, query: CustomerRecommendationsQuery) -> list[ProductRecommendation]:
         orders = self._orders.list(status=None, limit=self._max_orders)
         by_customer = _group_orders_by_customer(orders)
         owned_skus = _customer_skus(by_customer.get(query.customer_id, []))
@@ -84,7 +84,7 @@ class GraphAnalyticsService:
 
         related_customers = _related_customers(query.customer_id, owned_skus, orders)
         candidate_scores: Counter[str] = Counter()
-        evidence: Dict[str, Set[str]] = defaultdict(set)
+        evidence: dict[str, set[str]] = defaultdict(set)
 
         for customer_id in related_customers:
             customer_orders = by_customer.get(customer_id, [])
@@ -104,7 +104,7 @@ class GraphAnalyticsService:
             for sku, score in ranked[: query.limit]
         ]
 
-    def _fallback_also_bought(self, query: AlsoBoughtQuery) -> List[ProductRecommendation]:
+    def _fallback_also_bought(self, query: AlsoBoughtQuery) -> list[ProductRecommendation]:
         orders = self._orders.list(status=None, limit=self._max_orders)
         candidate_scores: Counter[str] = Counter()
         for order in orders:
@@ -122,27 +122,26 @@ class GraphAnalyticsService:
         ]
 
 
-def _group_orders_by_customer(orders: Iterable[Order]) -> Dict[str, List[Order]]:
-    grouped: Dict[str, List[Order]] = defaultdict(list)
+def _group_orders_by_customer(orders: Iterable[Order]) -> dict[str, list[Order]]:
+    grouped: dict[str, list[Order]] = defaultdict(list)
     for order in orders:
         grouped[order.customer_id].append(order)
     return grouped
 
 
-def _customer_skus(orders: Iterable[Order]) -> Set[str]:
-    skus: Set[str] = set()
+def _customer_skus(orders: Iterable[Order]) -> set[str]:
+    skus: set[str] = set()
     for order in orders:
         for item in order.items:
             skus.add(item.sku)
     return skus
 
 
-def _related_customers(target_customer_id: str, owned_skus: Set[str], orders: Iterable[Order]) -> Set[str]:
-    related: Set[str] = set()
+def _related_customers(target_customer_id: str, owned_skus: set[str], orders: Iterable[Order]) -> set[str]:
+    related: set[str] = set()
     for order in orders:
         if order.customer_id == target_customer_id:
             continue
         if any(item.sku in owned_skus for item in order.items):
             related.add(order.customer_id)
     return related
-

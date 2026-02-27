@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-from typing import Any, Dict, Iterable, List
+from typing import Any
 
 import jwt
 
@@ -18,8 +18,8 @@ from .domain import (
     EventType,
     IdempotencyRecord,
     InventoryItem,
-    InventoryRequestItem,
     InventoryLookup,
+    InventoryRequestItem,
     InventoryReservation,
     InventoryReservationResult,
     InventorySnapshot,
@@ -42,12 +42,12 @@ from .domain import (
     TokenInput,
     TokenResponse,
     WebhookEvent,
-    WebhookRequest,
     WebhookReceipt,
+    WebhookRequest,
 )
 from .errors import NotFoundError, UnauthorizedError, ValidationError
-from .id_provider import IdProvider
 from .graph.projector import OrderProjector
+from .id_provider import IdProvider
 from .repositories import EventBus, IdempotencyRepository, InventoryRepository, OrderRepository, PaymentRepository
 from .settings import Settings
 
@@ -147,7 +147,7 @@ class OrderService:
             updated_at=now,
         )
 
-    def _publish_event(self, event_type: EventType, payload: Dict[str, Any]) -> None:
+    def _publish_event(self, event_type: EventType, payload: dict[str, Any]) -> None:
         self._events.publish(
             EventMessage(
                 id=self._ids.new_id(),
@@ -206,7 +206,7 @@ class InventoryService:
     def snapshot(self) -> InventorySnapshot:
         return InventorySnapshot(items=self._inventory.list_all())
 
-    def _publish_event(self, event_type: EventType, payload: Dict[str, Any]) -> None:
+    def _publish_event(self, event_type: EventType, payload: dict[str, Any]) -> None:
         self._events.publish(
             EventMessage(
                 id=self._ids.new_id(),
@@ -286,7 +286,7 @@ class PaymentService:
                 self._order_service.mark_paid(PaymentSucceeded(order_id=order_id, payment_id=payment_id))
         return WebhookReceipt(received=True)
 
-    def _publish_event(self, event_type: EventType, payload: Dict[str, Any]) -> None:
+    def _publish_event(self, event_type: EventType, payload: dict[str, Any]) -> None:
         self._events.publish(
             EventMessage(
                 id=self._ids.new_id(),
@@ -337,7 +337,7 @@ class WebhookService:
         return self._payments.apply_webhook(event)
 
     def _verify_signature(self, signature_header: str, payload: bytes) -> None:
-        parts: Dict[str, str] = {}
+        parts: dict[str, str] = {}
         try:
             for part in signature_header.split(","):
                 if not part.strip():

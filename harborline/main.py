@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Optional
 
 import strawberry
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -86,7 +86,7 @@ def graphql_schema() -> strawberry.Schema:
     @strawberry.type
     class Query:
         @strawberry.field
-        def order(self, info, id: str) -> Optional[GraphQLOrder]:
+        def order(self, info, id: str) -> GraphQLOrder | None:
             service: OrderService = info.context["container"].order_service
             try:
                 order = service.get_order(OrderLookup(order_id=id))
@@ -95,7 +95,7 @@ def graphql_schema() -> strawberry.Schema:
             return to_graphql_order(order)
 
         @strawberry.field
-        def orders(self, info, status: Optional[str] = None, limit: int = 50) -> list[GraphQLOrder]:
+        def orders(self, info, status: str | None = None, limit: int = 50) -> list[GraphQLOrder]:
             service: OrderService = info.context["container"].order_service
             try:
                 status_value = OrderStatus(status) if status else None
@@ -154,10 +154,21 @@ def graphql_schema() -> strawberry.Schema:
 
 
 def create_app(settings: Settings) -> FastAPI:
+    container = build_container(settings)
+
+    @asynccontextmanager
+    async def lifespan(_: FastAPI):
+        yield
+        if container.graph_db:
+            container.graph_db.close()
+        if container.db:
+            container.db.engine.dispose()
+
     app = FastAPI(
         title=settings.app_name,
         version="1.0.0",
         description="Unified commerce core for orders, payments, inventory, and real-time ops.",
+        lifespan=lifespan,
     )
 
     app.add_middleware(
@@ -178,15 +189,9 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.include_router(ui_router)
 
-    container = build_container(settings)
     app.state.container = container
 
     configure_observability(app, settings, engine=container.db.engine if container.db else None)
-
-    @app.on_event("shutdown")
-    async def shutdown_event() -> None:
-        if container.graph_db:
-            container.graph_db.close()
 
     @app.exception_handler(NotFoundError)
     async def handle_not_found(_, __):
@@ -220,13 +225,13 @@ def create_app(settings: Settings) -> FastAPI:
     async def root():
         return RedirectResponse(url="/ui")
 
-    async def event_stream(order_id: Optional[str]):
+    async def event_stream(order_id: str | None):
         queue = container.event_bus.subscribe()
         try:
             while True:
                 try:
                     event = await asyncio.wait_for(queue.get(), timeout=15)
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     yield ": keepalive\n\n"
                     continue
                 if order_id and event.payload.get("order_id") != order_id:
@@ -236,7 +241,7 @@ def create_app(settings: Settings) -> FastAPI:
             container.event_bus.unsubscribe(queue)
 
     @app.get("/stream/orders")
-    async def stream_orders(order_id: Optional[str] = None):
+    async def stream_orders(order_id: str | None = None):
         return StreamingResponse(event_stream(order_id), media_type="text/event-stream")
 
     @app.websocket("/ws/shipments")

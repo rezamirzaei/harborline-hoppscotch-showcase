@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import List, Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -20,7 +18,7 @@ class OrderView(BaseModel):
     total: float
     created_at: str
     updated_at: str
-    items: List[OrderItemView]
+    items: list[OrderItemView]
 
 
 class PaymentView(BaseModel):
@@ -41,8 +39,8 @@ class DashboardView(BaseModel):
     total_orders: int
     total_revenue: float
     paid_orders: int
-    recent_orders: List[OrderView]
-    inventory: List[InventoryView]
+    recent_orders: list[OrderView]
+    inventory: list[InventoryView]
 
 
 class GraphSeedResult(BaseModel):
@@ -51,7 +49,7 @@ class GraphSeedResult(BaseModel):
     customer_b_id: str
     order_a_id: str
     order_b_id: str
-    orders: List[OrderView]
+    orders: list[OrderView]
 
 
 class InventoryShortageView(BaseModel):
@@ -62,6 +60,6 @@ class InventoryShortageView(BaseModel):
 
 class OpsSimulationResult(BaseModel):
     order: OrderView
-    payment: Optional[PaymentView] = None
+    payment: PaymentView | None = None
     reservation_status: str
-    shortages: List[InventoryShortageView] = Field(default_factory=list)
+    shortages: list[InventoryShortageView] = Field(default_factory=list)

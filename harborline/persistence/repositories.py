@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Iterable, List, Optional
+import builtins
+from collections.abc import Iterable
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import joinedload
@@ -74,7 +75,7 @@ class SqlAlchemyOrderRepository:
             session.add(record)
         return order
 
-    def get(self, order_id: str) -> Optional[Order]:
+    def get(self, order_id: str) -> Order | None:
         with self._db.session() as session:
             stmt = select(OrderRecord).options(joinedload(OrderRecord.items)).where(OrderRecord.id == order_id)
             record = session.execute(stmt).unique().scalars().first()
@@ -82,7 +83,7 @@ class SqlAlchemyOrderRepository:
                 return None
             return order_from_record(record)
 
-    def list(self, status: Optional[OrderStatus], limit: int) -> List[Order]:
+    def list(self, status: OrderStatus | None, limit: int) -> builtins.list[Order]:
         with self._db.session() as session:
             stmt = select(OrderRecord).options(joinedload(OrderRecord.items)).order_by(OrderRecord.created_at.desc())
             if status:
@@ -133,13 +134,13 @@ class SqlAlchemyPaymentRepository:
             session.add(record)
         return payment
 
-    def get(self, payment_id: str) -> Optional[PaymentIntent]:
+    def get(self, payment_id: str) -> PaymentIntent | None:
         with self._db.session() as session:
             stmt = select(PaymentIntentRecord).where(PaymentIntentRecord.id == payment_id)
             record = session.execute(stmt).scalars().first()
             return payment_from_record(record) if record else None
 
-    def list_by_order(self, order_id: str) -> List[PaymentIntent]:
+    def list_by_order(self, order_id: str) -> list[PaymentIntent]:
         with self._db.session() as session:
             stmt = (
                 select(PaymentIntentRecord)
@@ -149,7 +150,7 @@ class SqlAlchemyPaymentRepository:
             records = session.execute(stmt).scalars().all()
             return [payment_from_record(record) for record in records]
 
-    def list_all(self) -> List[PaymentIntent]:
+    def list_all(self) -> list[PaymentIntent]:
         with self._db.session() as session:
             stmt = select(PaymentIntentRecord).order_by(PaymentIntentRecord.created_at.desc())
             records = session.execute(stmt).scalars().all()
@@ -169,29 +170,35 @@ class SqlAlchemyInventoryRepository:
     def __init__(self, db: Database) -> None:
         self._db = db
 
-    def get(self, sku: str) -> Optional[InventoryItem]:
+    def get(self, sku: str) -> InventoryItem | None:
         with self._db.session() as session:
-            record = session.execute(select(InventoryItemRecord).where(InventoryItemRecord.sku == sku)).scalars().first()
+            record = (
+                session.execute(select(InventoryItemRecord).where(InventoryItemRecord.sku == sku)).scalars().first()
+            )
             if not record:
                 return None
             return InventoryItem(sku=record.sku, available=record.available)
 
-    def list_all(self) -> List[InventoryItem]:
+    def list_all(self) -> list[InventoryItem]:
         with self._db.session() as session:
-            records = session.execute(select(InventoryItemRecord).order_by(InventoryItemRecord.sku.asc())).scalars().all()
+            records = (
+                session.execute(select(InventoryItemRecord).order_by(InventoryItemRecord.sku.asc())).scalars().all()
+            )
             return [InventoryItem(sku=record.sku, available=record.available) for record in records]
 
-    def shortages(self, items: Iterable[InventoryRequestItem]) -> List[InventoryShortage]:
+    def shortages(self, items: Iterable[InventoryRequestItem]) -> list[InventoryShortage]:
         requested = list(items)
         if not requested:
             return []
 
         skus = [item.sku for item in requested]
         with self._db.session() as session:
-            records = session.execute(select(InventoryItemRecord).where(InventoryItemRecord.sku.in_(skus))).scalars().all()
+            records = (
+                session.execute(select(InventoryItemRecord).where(InventoryItemRecord.sku.in_(skus))).scalars().all()
+            )
             current = {record.sku: record.available for record in records}
 
-        shortages: List[InventoryShortage] = []
+        shortages: list[InventoryShortage] = []
         for item in requested:
             available = int(current.get(item.sku, 0))
             if available < item.qty:
@@ -221,7 +228,7 @@ class SqlAlchemyIdempotencyRepository:
     def __init__(self, db: Database) -> None:
         self._db = db
 
-    def get(self, key: str) -> Optional[IdempotencyRecord]:
+    def get(self, key: str) -> IdempotencyRecord | None:
         with self._db.session() as session:
             stmt = (
                 select(IdempotencyRecordRecord, OrderRecord)

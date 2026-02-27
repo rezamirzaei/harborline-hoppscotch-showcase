@@ -22,7 +22,7 @@ class OrderRecord(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False, index=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=False), nullable=False)
 
-    items: Mapped[list["OrderItemRecord"]] = relationship(
+    items: Mapped[list[OrderItemRecord]] = relationship(
         back_populates="order",
         cascade="all, delete-orphan",
         lazy="joined",
@@ -64,4 +64,3 @@ class IdempotencyRecordRecord(Base):
 
     key: Mapped[str] = mapped_column(String(128), primary_key=True)
     order_id: Mapped[str] = mapped_column(ForeignKey("orders.id", ondelete="CASCADE"), nullable=False, index=True)
-

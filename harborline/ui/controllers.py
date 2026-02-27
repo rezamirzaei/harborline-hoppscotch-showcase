@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from starlette.status import HTTP_303_SEE_OTHER
 
+from ..container import Container
 from ..deps import (
     get_container,
     get_inventory_service,
@@ -17,7 +17,6 @@ from ..deps import (
     get_payment_service,
     get_settings,
 )
-from ..container import Container
 from ..domain import (
     CreateOrderInput,
     InventoryReservation,
@@ -50,7 +49,7 @@ TEMPLATES = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 router = APIRouter(prefix="/ui")
 
 
-def build_order_items(items: List[OrderItem]) -> List[OrderItemView]:
+def build_order_items(items: list[OrderItem]) -> list[OrderItemView]:
     return [
         OrderItemView(
             sku=item.sku,
@@ -121,7 +120,7 @@ async def dashboard(
 @router.get("/orders")
 async def orders(
     request: Request,
-    status: Optional[str] = None,
+    status: str | None = None,
     order_service: OrderService = Depends(get_order_service),
 ):
     try:
@@ -143,7 +142,7 @@ async def orders(
 @router.get("/orders/new")
 async def new_order(
     request: Request,
-    error: Optional[str] = None,
+    error: str | None = None,
     settings: Settings = Depends(get_settings),
 ):
     defaults = load_ui_defaults(settings.ui_defaults_path)
@@ -182,7 +181,7 @@ async def create_order(
 async def order_detail(
     request: Request,
     order_id: str,
-    error: Optional[str] = None,
+    error: str | None = None,
     order_service: OrderService = Depends(get_order_service),
     payment_service: PaymentService = Depends(get_payment_service),
 ):
@@ -227,7 +226,7 @@ async def reserve_order(
 @router.post("/orders/{order_id}/payment-intent")
 async def create_payment_intent_ui(
     order_id: str,
-    capture: Optional[bool] = Form(False),
+    capture: bool | None = Form(False),
     order_service: OrderService = Depends(get_order_service),
     payment_service: PaymentService = Depends(get_payment_service),
 ):
@@ -360,13 +359,19 @@ async def seed_graph_demo(
     base_items = [OrderItem(**item) for item in raw_items]
     base_skus = {item.sku for item in base_items}
 
-    shared_sku = str((defaults.graph_also_bought_variables or {}).get("sku") or (base_items[0].sku if base_items else ""))
+    shared_sku = str(
+        (defaults.graph_also_bought_variables or {}).get("sku") or (base_items[0].sku if base_items else "")
+    )
     if shared_sku and shared_sku not in base_skus and base_items:
         shared_sku = base_items[0].sku
 
     preferred_unique = "SKU-WHITE-DESK"
     unique_candidates = [sku for sku in inventory_skus if sku not in base_skus and sku != shared_sku]
-    unique_sku = preferred_unique if preferred_unique in unique_candidates else (unique_candidates[0] if unique_candidates else "")
+    unique_sku = (
+        preferred_unique
+        if preferred_unique in unique_candidates
+        else (unique_candidates[0] if unique_candidates else "")
+    )
 
     shared_unit_price = next((item.unit_price for item in base_items if item.sku == shared_sku), None)
     fallback_price = max((item.unit_price for item in base_items), default=10.0)
@@ -380,10 +385,18 @@ async def seed_graph_demo(
 
     currency = "USD"
     order_a_items = base_items or [
-        OrderItem(sku=shared_sku or (inventory_skus[0] if inventory_skus else "SKU-UNKNOWN"), qty=1, unit_price=shared_unit_price)
+        OrderItem(
+            sku=shared_sku or (inventory_skus[0] if inventory_skus else "SKU-UNKNOWN"),
+            qty=1,
+            unit_price=shared_unit_price,
+        )
     ]
     order_b_items = [
-        OrderItem(sku=shared_sku or (inventory_skus[0] if inventory_skus else "SKU-UNKNOWN"), qty=1, unit_price=shared_unit_price),
+        OrderItem(
+            sku=shared_sku or (inventory_skus[0] if inventory_skus else "SKU-UNKNOWN"),
+            qty=1,
+            unit_price=shared_unit_price,
+        ),
     ]
     if unique_sku:
         order_b_items.append(OrderItem(sku=unique_sku, qty=1, unit_price=float(unique_unit_price)))
@@ -472,7 +485,9 @@ async def simulate_ops_workflow(
             shortages=[InventoryShortageView(**s.model_dump(mode="json")) for s in reservation.shortages],
         )
 
-    intent = payment_service.create_intent(PaymentIntentCreate(order_id=created.id, amount=created.total, capture=False))
+    intent = payment_service.create_intent(
+        PaymentIntentCreate(order_id=created.id, amount=created.total, capture=False)
+    )
     capture = payment_service.capture(PaymentCapture(payment_id=intent.id))
 
     updated_order = order_service.get_order(OrderLookup(order_id=created.id))

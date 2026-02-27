@@ -1,9 +1,8 @@
-import hmac
 import hashlib
+import hmac
 import json
 import time
 
-import pytest
 from fastapi.testclient import TestClient
 
 from harborline.main import app
@@ -347,11 +346,14 @@ class TestGraphQL:
 def test_health():
     TestHealth().test_health_returns_ok()
 
+
 def test_create_order_idempotent():
     TestOrders().test_create_order_idempotent()
 
+
 def test_inventory_reservation():
     TestInventory().test_inventory_reservation()
+
 
 def test_webhook_signature():
     TestPayments().test_webhook_signature()
