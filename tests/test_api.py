@@ -2,6 +2,7 @@ import hashlib
 import hmac
 import json
 import time
+from typing import cast
 
 from fastapi.testclient import TestClient
 
@@ -21,9 +22,11 @@ def login_token() -> str:
         json={"username": settings.demo_user, "password": settings.demo_password},
     )
     assert response.status_code == 200
-    data = response.json()
-    assert data["access_token"]
-    return data["access_token"]
+    data = cast(dict[str, object], response.json())
+    token = data.get("access_token")
+    assert isinstance(token, str)
+    assert token
+    return token
 
 
 def auth_headers() -> dict:
