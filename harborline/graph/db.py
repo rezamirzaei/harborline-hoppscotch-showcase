@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
-
-from neo4j import Driver, GraphDatabase
+from typing import Any, cast
 
 
 @dataclass
@@ -12,9 +10,16 @@ class GraphDb:
     user: str
     password: str
     database: str | None = None
-    driver: Driver = field(init=False)
+    driver: Any = field(init=False)
 
     def __post_init__(self) -> None:
+        try:
+            from neo4j import GraphDatabase
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                "Neo4j driver is not installed. Install `neo4j` or disable graph features (unset GRAPH_DB_URI / GRAPH_DB_PASSWORD)."
+            ) from exc
+
         self.driver = GraphDatabase.driver(self.uri, auth=(self.user, self.password))
 
     def verify_connectivity(self) -> None:
@@ -26,12 +31,14 @@ class GraphDb:
     def execute_write(self, cypher: str, parameters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         params = parameters or {}
         with self.driver.session(database=self.database) as session:
-            return session.execute_write(lambda tx: tx.run(cypher, params).data())
+            result = session.execute_write(lambda tx: tx.run(cypher, params).data())
+            return cast(list[dict[str, Any]], result)
 
     def execute_read(self, cypher: str, parameters: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         params = parameters or {}
         with self.driver.session(database=self.database) as session:
-            return session.execute_read(lambda tx: tx.run(cypher, params).data())
+            result = session.execute_read(lambda tx: tx.run(cypher, params).data())
+            return cast(list[dict[str, Any]], result)
 
     def ensure_schema(self) -> None:
         constraints = [
